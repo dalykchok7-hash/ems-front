@@ -1,0 +1,259 @@
+
+:host {
+  display: block;
+  height: 100vh;
+  flex-shrink: 0;
+}
+
+/* ══ DESKTOP ══════════════════════════════════════════ */
+.sidebar {
+  width: 212px;
+  height: 100%;
+  background: #111627;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  flex-direction: column;
+  font-family: 'Outfit', sans-serif;
+}
+
+.sidebar-logo {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.sidebar-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.sidebar-logo-box {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(37,99,235,0.3);
+}
+.sidebar-logo-title { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+.sidebar-logo-sub {
+  font-size: 9px; color: #525c78;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  margin-top: 3px; padding-left: 39px;
+}
+
+.sidebar-nav { padding: 12px 8px; flex: 1; overflow-y: auto; }
+.sidebar-nav::-webkit-scrollbar { width: 2px; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+.sidebar-nav-label {
+  font-size: 9px; font-weight: 700; color: #525c78;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 0 8px; margin-bottom: 6px; margin-top: 10px;
+}
+.sidebar-nav-label:first-child { margin-top: 4px; }
+
+.sidebar-nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: 9px;
+  color: #9ba3c8; cursor: pointer;
+  font-size: 12px; font-weight: 500;
+  margin-bottom: 1px; transition: all 0.15s;
+  position: relative; text-decoration: none;
+  border: 1px solid transparent;
+}
+.sidebar-nav-item:hover { color: #eef0fa; background: rgba(255,255,255,0.04); }
+.sidebar-nav-item--active {
+  color: #fff !important;
+  background: linear-gradient(135deg, rgba(37,99,235,0.15), rgba(124,58,237,0.08)) !important;
+  border-color: rgba(37,99,235,0.25) !important;
+}
+.sidebar-nav-item--active::before {
+  content: '';
+  position: absolute; left: 0; top: 22%; height: 56%; width: 2.5px;
+  background: #3b82f6; border-radius: 0 3px 3px 0;
+}
+
+.sidebar-nav-icon { font-size: 13px; width: 15px; text-align: center; flex-shrink: 0; }
+
+.sidebar-nav-badge {
+  margin-left: auto; border-radius: 8px;
+  padding: 1px 6px; font-size: 9px; font-weight: 700;
+}
+.sidebar-nav-badge--red  { background: #f87171; color: #fff; }
+.sidebar-nav-badge--blue { background: #3b82f6; color: #fff; }
+
+.sidebar-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
+.sidebar-online {
+  display: flex; align-items: center; gap: 8px;
+  background: #17203a; border: 1px solid rgba(34,197,94,0.15);
+  border-radius: 9px; padding: 8px 11px;
+}
+.sidebar-online-dot {
+  width: 6px; height: 6px; background: #22c55e;
+  border-radius: 50%; box-shadow: 0 0 6px #22c55e;
+  animation: onlinePulse 2s infinite; flex-shrink: 0;
+}
+@keyframes onlinePulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.sidebar-online-title { font-size: 10.5px; font-weight: 600; color: #22c55e; }
+.sidebar-online-sub   { font-size: 9px; color: #525c78; }
+
+/* Cachés sur desktop */
+.sidebar-mobile-toggle  { display: none; }
+.sidebar-mobile-overlay { display: none; }
+
+/* ══════════════════════════════════════════════════════
+   MOBILE ≤ 1024px
+══════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  :host {
+    display: block;
+    height: auto;
+    position: relative;
+    z-index: 200;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* Logo row = barre horizontale */
+  .sidebar-logo {
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: none;
+  }
+  .sidebar-logo-sub { display: none; }
+
+  /* ── Bouton hamburger ── */
+  .sidebar-mobile-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 38px; height: 38px;
+    background: #17203a;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 9px;
+    cursor: pointer;
+    padding: 9px;
+    flex-shrink: 0;
+  }
+  .sidebar-mobile-toggle span {
+    display: block;
+    width: 100%; height: 2px;
+    background: #9ba3c8;
+    border-radius: 2px;
+    transition: all 0.25s;
+    transform-origin: center;
+  }
+  .sidebar-mobile-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .sidebar-mobile-toggle.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+  .sidebar-mobile-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+  /* ── Menu déroulant ── */
+  .sidebar-nav {
+    display: none;
+    padding: 8px;
+    background: #111627;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    max-height: 65dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sidebar-nav.open { display: block; }
+
+  .sidebar-nav-item { font-size: 13px; padding: 12px 12px; }
+
+  .sidebar-footer {
+    display: none;
+    padding: 8px 12px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: #111627;
+  }
+  .sidebar-footer.open { display: block; }
+
+  /* ── Overlay ── */
+  .sidebar-mobile-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 199;
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .sidebar-mobile-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+}
+/* ══════════════════════════════════════════════════════
+   FIX VISIBILITÉ MENU MOBILE — À ajouter à la fin de sidebar.css
+══════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+
+  /* Fond opaque forcé sur toute la sidebar */
+  .sidebar {
+    background: #111627 !important;
+    position: relative;
+    z-index: 200;
+  }
+
+  /* Menu déroulant — fond opaque et texte visible */
+  .sidebar-nav {
+    background: #111627 !important;
+    border-top: 1px solid rgba(255,255,255,0.1) !important;
+    padding: 10px !important;
+  }
+
+  /* Labels de section visibles */
+  .sidebar-nav-label {
+    color: #9ba3c8 !important;
+    opacity: 1 !important;
+  }
+
+  /* Liens visibles */
+  .sidebar-nav-item {
+    color: #eef0fa !important;
+    opacity: 1 !important;
+    background: rgba(255,255,255,0.03) !important;
+    margin-bottom: 3px !important;
+  }
+
+  .sidebar-nav-item:hover {
+    background: rgba(255,255,255,0.08) !important;
+  }
+
+  .sidebar-nav-item--active {
+    background: linear-gradient(135deg, rgba(37,99,235,0.25), rgba(124,58,237,0.15)) !important;
+    border-color: rgba(37,99,235,0.4) !important;
+    color: #fff !important;
+  }
+
+  /* Footer visible */
+  .sidebar-footer {
+    background: #111627 !important;
+  }
+
+  /* Logo bar */
+  .sidebar-logo {
+    background: #111627 !important;
+  }
+
+  /* Overlay derrière le menu */
+  .sidebar-mobile-overlay {
+    z-index: 150 !important;
+  }
+
+  /* S'assurer que la sidebar est AU-DESSUS de l'overlay */
+  .sidebar {
+    z-index: 200 !important;
+  }
+}

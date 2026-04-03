@@ -1,0 +1,678 @@
+<div class="creneaux-root">
+
+  <!-- ══ TOAST ══════════════════════════════════════════════════ -->
+  <div *ngIf="toastVisible()"
+       class="toast-container"
+       [ngClass]="{
+         'toast-success': toastType() === 'success',
+         'toast-warning': toastType() === 'warning',
+         'toast-info':    toastType() === 'info'
+       }">
+    {{ toastMessage() }}
+  </div>
+
+  <!-- ══ KPI STRIP ══════════════════════════════════════════════ -->
+  <div class="kpi-strip">
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--blue">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-value">{{ totalSeances() }}</div>
+        <div class="kpi-label">Séances du jour</div>
+      </div>
+    </div>
+    <div class="kpi-divider"></div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--green">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-value text-emerald-400">{{ totalReservationsActives() }}</div>
+        <div class="kpi-label">Réservations actives</div>
+      </div>
+    </div>
+    <div class="kpi-divider"></div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--red">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-value text-red-400">{{ seancesCompletes() }}</div>
+        <div class="kpi-label">Séances complètes</div>
+      </div>
+    </div>
+    <div class="kpi-divider"></div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon--amber">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="kpi-value text-amber-400">{{ reservationsEnAttente() }}</div>
+        <div class="kpi-label">En attente</div>
+      </div>
+    </div>
+    <div class="kpi-divider"></div>
+    <div class="kpi-card" style="min-width: 200px">
+      <div class="kpi-icon kpi-icon--cyan">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <div class="flex items-center justify-between mb-1">
+          <div class="kpi-label">Taux de remplissage</div>
+          <div class="kpi-value text-cyan-400 text-base">{{ tauxRemplissage() }}%</div>
+        </div>
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div class="h-full bg-cyan-500 rounded-full transition-all duration-700"
+               [style.width.%]="tauxRemplissage()"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+  <!-- ══ DATE NAVIGATION ════════════════════════════════════════ -->
+  <div class="date-nav-bar">
+    <div class="date-nav-left">
+      <button (click)="previousDay()" class="nav-arrow-btn">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <div class="date-display">
+        <span class="date-text">{{ formatDate(currentDate()) }}</span>
+        <span class="date-today-badge">Aujourd'hui</span>
+      </div>
+      <button (click)="nextDay()" class="nav-arrow-btn">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </button>
+    </div>
+    <div class="date-nav-right">
+      <div class="quick-days">
+        <button *ngFor="let d of quickDays()"
+                class="quick-day-btn"
+                [class.quick-day-btn--active]="d.isActive"
+                (click)="selectQuickDay(d.date)">
+          {{ d.label }}
+        </button>
+      </div>
+     <button class="calendar-btn" (click)="openCalendar(datePicker)">
+  Calendrier
+</button>
+
+<input #datePicker
+       type="date"
+       [ngModel]="formatDateForApi(currentDate())"
+       (change)="onDateSelected($event)"
+       style="position:absolute;width:0;height:0;opacity:0;pointer-events:none;" />
+    </div>
+  </div>
+
+  <!-- ══ TIMELINE ════════════════════════════════════════════════ -->
+  <div class="timeline-wrap">
+    <div class="timeline-label">Vue rapide — créneaux du jour</div>
+    <div class="timeline-slots">
+      <div *ngFor="let s of seances()"
+           (click)="selectSeance(s.id)"
+           class="tl-slot"
+           [class.tl-slot--selected]="isSelectedSeance(s.id)"
+           [class.tl-slot--full]="s.est_complet && !isSelectedSeance(s.id)">
+        <div class="tl-header">
+          <span class="tl-dot"
+                [class.tl-dot--full]="s.est_complet"
+                [class.tl-dot--mid]="!s.est_complet && (3 - s.places_disponibles) >= 1"
+                [class.tl-dot--ok]="!s.est_complet && (3 - s.places_disponibles) < 1">
+          </span>
+          <span class="tl-time">{{ s.heure_debut }}</span>
+        </div>
+        <div class="tl-bar">
+          <div class="tl-bar-fill"
+               [style.width.%]="((3 - s.places_disponibles) / 3) * 100"
+               [ngClass]="s.est_complet ? 'bg-red-500' : (3 - s.places_disponibles) >= 2 ? 'bg-amber-500' : 'bg-emerald-500'">
+          </div>
+        </div>
+        <div class="tl-count">{{ 3 - s.places_disponibles }}/3</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CONTENT PANELS ══════════════════════════════════════════ -->
+  <div class="content-panels">
+
+    <!-- ── LEFT PANEL — Sessions list ── -->
+    <div class="left-panel">
+      <div class="left-panel-head">
+        <div class="panel-title">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+          Séances
+          <span class="panel-count-badge">{{ filteredSeances().length }}</span>
+        </div>
+        
+      </div>
+      <div class="sessions-scroll">
+        <div *ngFor="let s of filteredSeances()"
+             (click)="selectSeance(s.id)"
+             class="session-card"
+             [class.session-card--selected]="isSelectedSeance(s.id)">
+          <div *ngIf="isSelectedSeance(s.id)" class="session-card-indicator"></div>
+          <div class="session-card-top">
+            <div class="flex items-center gap-2">
+              <div class="session-icon" [class.session-icon--active]="isSelectedSeance(s.id)">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <span class="session-time">{{ s.heure_debut }} – {{ s.heure_fin }}</span>
+            </div>
+            <span class="session-badge"
+                  [class.session-badge--full]="s.est_complet"
+                  [class.session-badge--ok]="!s.est_complet">
+              {{ s.est_complet ? 'Complet' : s.places_disponibles + ' dispo' }}
+            </span>
+          </div>
+          <div class="session-card-bottom">
+            <span class="session-occ-label">Occupation</span>
+            <span class="session-occ-value"
+                  [ngClass]="s.places_disponibles === 0 ? 'text-red-400' : 'text-slate-300'">
+              {{ 3 - s.places_disponibles }} / 3
+            </span>
+          </div>
+          <div class="session-progress-bar">
+            <div class="session-progress-fill"
+                 [style.width.%]="((3 - s.places_disponibles) / 3) * 100"
+                 [ngClass]="getBarColor(s)"></div>
+          </div>
+        </div>
+        <div *ngIf="filteredSeances().length === 0" class="empty-sessions">
+          <span class="text-slate-500 text-sm">Aucune séance trouvée</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT PANEL — Reservations ── -->
+    <div class="right-panel">
+      <div class="right-bg-glow"></div>
+
+      <ng-container *ngIf="!selectedSeance(); else hasSelection">
+        <div class="empty-selection">
+          <div class="empty-selection-icon">
+            <svg class="w-10 h-10 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h2 class="text-xl font-bold text-slate-300">Sélectionnez une séance</h2>
+          <p class="text-slate-500 text-center text-sm max-w-xs">
+            Cliquez sur un créneau dans la liste de gauche.
+          </p>
+        </div>
+      </ng-container>
+
+      <ng-template #hasSelection>
+        <!-- Panel Header -->
+        <div class="res-header">
+          <div class="res-header-left">
+            <div class="res-time-chip">
+              <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>{{ selectedSeance()?.heure_debut }} – {{ selectedSeance()?.heure_fin }}</span>
+            </div>
+            <div class="res-ring-wrap">
+              <svg class="res-ring-svg" width="48" height="48" viewBox="0 0 48 48">
+                <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4"
+                        fill="transparent" class="text-slate-800"/>
+                <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="4"
+                        fill="transparent"
+                        [attr.stroke-dasharray]="ringDashArray()"
+                        [attr.stroke-dashoffset]="ringDashOffset()"
+                        [ngClass]="selectedSeance()?.est_complet ? 'text-red-500' : occupationPercent() >= 60 ? 'text-amber-500' : 'text-blue-500'"
+                        class="res-ring-fg"/>
+              </svg>
+              <span class="res-ring-label"
+                    [ngClass]="selectedSeance()?.est_complet ? 'text-red-400' : 'text-blue-400'">
+                {{ occupationPercent() }}%
+              </span>
+            </div>
+            <div>
+              <div class="text-sm font-bold text-white">{{ 3 - (selectedSeance()?.places_disponibles || 0) }} / 3 places</div>
+              <div class="text-xs text-slate-500 uppercase tracking-wide font-semibold">Remplissage</div>
+            </div>
+          </div>
+          <div class="res-header-right">
+            <button class="btn-export">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              Exporter
+            </button>
+            <button (click)="openModal()"
+                    [disabled]="selectedSeance()?.est_complet"
+                    class="btn-reserve"
+                    [class.btn-reserve--disabled]="selectedSeance()?.est_complet">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              </svg>
+              Réserver un client
+            </button>
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div class="search-wrap">
+              <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              <input type="text"
+                     [ngModel]="reservationsSearchValue"
+                     (ngModelChange)="reservationsSearchValue = $event"
+                     placeholder="Nom, CIN ou téléphone..."
+                     class="search-input"/>
+            </div>
+            
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+          <table class="res-table">
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>Appareil</th>
+                <th>Gilet</th>
+                <th>Statut</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let res of selectedSeanceReservations()" class="res-row">
+                <!-- Client -->
+                <td>
+                  <div class="client-cell">
+                    <div class="client-avatar">{{ getInitials(res.client_nom) }}</div>
+                    <div>
+                      <div class="client-name">{{ res.client_nom }}</div>
+                      <div class="client-meta">
+                        <span class="client-cin">🪪 {{ res.client_cin }}</span>
+                        <span class="meta-sep">·</span>
+                        <span class="client-phone">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                          </svg>
+                          {{ res.client_telephone }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <!-- Appareil -->
+                <td>
+                  <span class="device-tag"
+                        [class.device-tag--motion]="res.type_appareil === 'i-motion'"
+                        [class.device-tag--model]="res.type_appareil === 'i-model'">
+                    {{ res.type_appareil === 'i-motion' ? '⚡' : '🔷' }} {{ res.type_appareil }}
+                  </span>
+                </td>
+                <!-- Gilet — colonne taille -->
+                <td>
+                  <span class="device-tag"
+                        [style.color]="getTailleColor(res.taille_gilet)"
+                        [style.background]="getTailleColor(res.taille_gilet) + '18'"
+                        [style.border]="'1px solid ' + getTailleColor(res.taille_gilet) + '30'">
+                    👕 {{ res.taille_gilet }}
+                  </span>
+                </td>
+                <!-- Statut -->
+                <td>
+                  <span class="status-tag"
+                        [class.status-tag--present]="res.statut === 'present'"
+                        [class.status-tag--absent]="res.statut === 'absent'"
+                        [class.status-tag--waiting]="res.statut === 'en_attente'">
+                    <span class="status-dot"></span>
+                    {{ res.statut_label }}
+                  </span>
+                </td>
+                <!-- Actions -->
+                <td>
+                  <div class="action-cell">
+                    <button *ngIf="res.statut !== 'present' && res.statut !== 'annule'"
+        (click)="changeReservationStatus(res.id, 'present')"
+        class="action-btn action-btn--present">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      Présent
+                    </button>
+                    <button *ngIf="res.statut !== 'absent' && res.statut !== 'annule'"
+        (click)="changeReservationStatus(res.id, 'absent')"
+        class="action-btn action-btn--absent">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                      Absent
+                    </button>
+                    <button class="action-btn action-btn--call">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                      </svg>
+                    </button>
+                    <button (click)="cancelReservation(res.id)" class="action-btn action-btn--cancel">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="selectedSeanceReservations().length === 0">
+                <td colspan="5" class="empty-table-row">
+                  <div class="empty-table-icon">
+                    <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                  </div>
+                  <p class="text-slate-400 font-medium text-sm">Aucune réservation trouvée</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- ══ MODAL — NOUVELLE RÉSERVATION ═══════════════════════════ -->
+  <div *ngIf="isModalOpen()" class="modal-backdrop" (click)="closeModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title">Nouvelle Réservation</h3>
+          <p class="modal-subtitle">
+            Séance de
+            <span class="modal-subtitle-chip">{{ selectedSeance()?.heure_debut }} – {{ selectedSeance()?.heure_fin }}</span>
+          </p>
+        </div>
+        <button (click)="closeModal()" class="modal-close-btn">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Stepper -->
+      <div class="stepper">
+        <div class="stepper-track"></div>
+        <div class="stepper-progress" [style.width.%]="(modalStep() - 1) * 50"></div>
+        <div *ngFor="let step of [{n:1,label:'Client'},{n:2,label:'Appareil & Gilet'},{n:3,label:'Confirmer'}]"
+             class="stepper-step">
+          <div class="stepper-circle" [class.stepper-circle--active]="modalStep() >= step.n">{{ step.n }}</div>
+          <span class="stepper-label" [class.stepper-label--active]="modalStep() >= step.n">{{ step.label }}</span>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <div *ngIf="modalError()" class="modal-error">
+  {{ modalError() }}
+</div>
+        <!-- ── Step 1 : Recherche Client ── -->
+        <div *ngIf="modalStep() === 1" class="step-content">
+          <p class="step-description">
+            Recherchez un client pour la séance de
+            <strong class="text-white">{{ selectedSeance()?.heure_debut }}</strong>.
+          </p>
+          <div class="modal-search-wrap">
+            <svg class="modal-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input type="text"
+                   [ngModel]="modalClientSearchQueryValue"
+                   (ngModelChange)="modalClientSearchQueryValue = $event"
+                   placeholder="Nom, CIN ou téléphone..."
+                   class="modal-search-input"/>
+          </div>
+          <div class="modal-client-list">
+            <div *ngIf="!modalClientSearchQuery() || modalClientSearchQuery().length < 2"
+                 class="modal-client-hint">
+              <span class="text-slate-500 text-sm">Saisissez au moins 2 caractères</span>
+            </div>
+            <div *ngIf="isSearchingClient()" class="modal-client-hint">
+              <span class="text-blue-400 text-sm">Recherche en cours...</span>
+            </div>
+            <div *ngIf="!isSearchingClient() && modalClientSearchQuery().length >= 2 && modalClientSearchResults().length === 0"
+                 class="modal-client-hint">
+              <span class="text-slate-500 text-sm">Aucun client trouvé.</span>
+            </div>
+            <div *ngFor="let client of modalClientSearchResults()"
+                 (click)="selectModalClient(client)"
+                 class="modal-client-item">
+              <div class="modal-client-avatar">{{ getInitials((client.prenom || '') + ' ' + (client.nom || '')) }}</div>
+              <div class="flex-1">
+                <div class="modal-client-name">{{ client.prenom }} {{ client.nom }}</div>
+                <div class="modal-client-meta">
+                  <span>🪪 {{ client.cin }}</span>
+                  <span class="text-cyan-400">📞 {{ client.telephone_1 }}</span>
+                </div>
+              </div>
+              <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ Step 2 : Appareil → Taille dynamique ══ -->
+        <div *ngIf="modalStep() === 2" class="step-content">
+
+          <!-- Client recap -->
+          <div class="client-recap">
+            <div class="client-recap-avatar">{{ getInitials(((modalSelectedClient()?.prenom || '') + ' ' + (modalSelectedClient()?.nom || '')).trim()) }}</div>
+            <div class="flex-1">
+              <div class="client-recap-name">{{ modalSelectedClient()?.prenom }} {{ modalSelectedClient()?.nom }}</div>
+              <div class="client-recap-meta">
+                <span>🪪 {{ modalSelectedClient()?.cin }}</span>
+                <span>·</span>
+                <span class="text-cyan-400">📞 {{ modalSelectedClient()?.telephone_1 }}</span>
+              </div>
+            </div>
+            <button (click)="previousStep()" class="client-recap-change">Modifier</button>
+          </div>
+
+          <!-- ① Choisir l'appareil EN PREMIER -->
+          <h4 class="device-selection-title">① Choisissez l'appareil EMS</h4>
+          <div class="device-grid">
+            <!-- i-motion -->
+            <div (click)="selectModalDevice('i-motion')"
+                 class="device-card"
+                 [class.device-card--motion]="modalSelectedDevice() === 'i-motion'">
+              <div class="device-card-check"
+                   [class.device-card-check--motion]="modalSelectedDevice() === 'i-motion'">
+                <svg *ngIf="modalSelectedDevice() === 'i-motion'"
+                     class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div class="device-emoji">⚡</div>
+              <div class="device-name">i-motion</div>
+              <div class="device-desc">Stimulation musculaire globale</div>
+              <div class="device-tailles-hint">Tailles dispo : M · L · XL</div>
+            </div>
+            <!-- i-model -->
+            <div (click)="selectModalDevice('i-model')"
+                 class="device-card"
+                 [class.device-card--model]="modalSelectedDevice() === 'i-model'">
+              <div class="device-card-check"
+                   [class.device-card-check--model]="modalSelectedDevice() === 'i-model'">
+                <svg *ngIf="modalSelectedDevice() === 'i-model'"
+                     class="w-3 h-3 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div class="device-emoji">🔷</div>
+              <div class="device-name">i-model</div>
+              <div class="device-desc">Sculptant & tonifiant</div>
+              <div class="device-tailles-hint">Tailles dispo : M · L · XL</div>
+            </div>
+          </div>
+
+          <!-- ② Tailles — apparaissent APRÈS avoir choisi l'appareil -->
+          <div *ngIf="modalSelectedDevice()" class="taille-section">
+            <h4 class="device-selection-title">
+              ② Taille du gilet
+              <span class="taille-appareil-badge"
+                    [style.color]="getAppareilColor(modalSelectedDevice()!)"
+                    [style.background]="getAppareilColor(modalSelectedDevice()!) + '18'"
+                    [style.border]="'1px solid ' + getAppareilColor(modalSelectedDevice()!) + '30'">
+                {{ modalSelectedDevice() === 'i-motion' ? '⚡' : '🔷' }}
+                {{ modalSelectedDevice() }}
+              </span>
+            </h4>
+            <div class="taille-grid">
+              <div *ngFor="let taille of taillesDisponibles()"
+                   (click)="modalSelectedTaille.set(taille)"
+                   class="taille-card"
+                   [class.taille-card--selected]="modalSelectedTaille() === taille"
+                   [style.--t-color]="getTailleColor(taille)">
+                <!-- Checkmark si sélectionné -->
+                <div *ngIf="modalSelectedTaille() === taille"
+                     class="taille-check"
+                     [style.color]="getTailleColor(taille)">✓</div>
+                <div class="taille-icon">👕</div>
+                <div class="taille-label"
+                     [style.color]="modalSelectedTaille() === taille ? getTailleColor(taille) : '#fff'">
+                  {{ taille }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message si pas encore choisi l'appareil -->
+          <div *ngIf="!modalSelectedDevice()" class="taille-placeholder">
+            <span>👆 Choisissez d'abord l'appareil pour voir les tailles disponibles</span>
+          </div>
+
+        </div>
+
+        <!-- ── Step 3 : Confirmation ── -->
+        <div *ngIf="modalStep() === 3" class="step-content">
+          <div class="confirm-banner">
+            <div class="confirm-banner-icon">
+              <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+            </div>
+            <div>
+              <div class="text-white font-bold text-base">Prêt à confirmer ?</div>
+              <div class="text-slate-400 text-sm">Vérifiez les informations ci-dessous</div>
+            </div>
+          </div>
+          <div class="confirm-table">
+            <div class="confirm-row">
+              <span class="confirm-key">Client</span>
+              <span class="confirm-val">{{ modalSelectedClient()?.prenom }} {{ modalSelectedClient()?.nom }}</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-key">CIN</span>
+              <span class="confirm-val font-mono text-sm">{{ modalSelectedClient()?.cin }}</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-key">Téléphone</span>
+              <span class="confirm-val text-cyan-400 font-mono text-sm">{{ modalSelectedClient()?.telephone_1 }}</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-key">Séance</span>
+              <span class="confirm-val">{{ selectedSeance()?.heure_debut }} – {{ selectedSeance()?.heure_fin }}</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-key">Appareil</span>
+              <span class="device-tag"
+                    [class.device-tag--motion]="modalSelectedDevice() === 'i-motion'"
+                    [class.device-tag--model]="modalSelectedDevice() === 'i-model'">
+                {{ modalSelectedDevice() === 'i-motion' ? '⚡' : '🔷' }} {{ modalSelectedDevice() }}
+              </span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-key">Taille gilet</span>
+              <span class="device-tag"
+                    [style.color]="getTailleColor(modalSelectedTaille())"
+                    [style.background]="getTailleColor(modalSelectedTaille()) + '18'"
+                    [style.border]="'1px solid ' + getTailleColor(modalSelectedTaille()) + '30'">
+                👕 {{ modalSelectedTaille() }}
+              </span>
+            </div>
+            <div class="confirm-row" style="border-bottom:none">
+              <span class="confirm-key">Statut initial</span>
+              <span class="status-tag status-tag--waiting"><span class="status-dot"></span>En attente</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button [class.invisible]="modalStep() === 1"
+                (click)="previousStep()"
+                class="modal-btn-back">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+          </svg>
+          Retour
+        </button>
+        <button *ngIf="modalStep() < 3"
+                (click)="nextStep()"
+                [disabled]="(modalStep() === 1 && !modalSelectedClient()) || (modalStep() === 2 && !modalSelectedDevice())"
+                class="modal-btn-next">
+          Suivant
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </button>
+        <button *ngIf="modalStep() === 3"
+                (click)="confirmReservation()"  
+                [disabled]="!modalSelectedAbonnement()?.id"
+                class="modal-btn-confirm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Confirmer la réservation
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

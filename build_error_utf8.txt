@@ -1,0 +1,142 @@
+﻿
+> ems-frontend@0.0.0 build
+> ng build --no-progress
+
+Application bundle generation failed. [2.578 seconds] - 2026-03-26T16:57:41.957Z
+
+node.exe : 
+[1m[31m[31mX [41;31
+m[[41;97mERROR[41;31m
+][0m [1mTS2551: 
+Property 'telephone' 
+does not exist on type 
+'Client'. Did you mean 
+'telephone_1'?[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+Au caractère Ligne:1 : 
+1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: ([1m[31m[31   
+ mX...r-compiler][    
+0m:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+
+    src/app/features/cr
+eneaux/creneaux.html:51
+3:59:
+[37m      513 Ôöé ... 
+  <span 
+class="text-cyan-400">
+ƒô× {{ clien[32mt.tele
+pho[37mne }}</span>
+          ÔòÁ          
+                       
+            
+[32m~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+CreneauxComponent.
+
+    src/app/features/cr
+eneaux/creneaux.ts:52:1
+5:
+[37m      52 Ôöé   
+templateUrl: [32m'./cr
+eneaux.html'[37m,
+         ÔòÁ           
+     [32m~~~~~~~~~~~~~
+~~~~[0m
+
+
+[31mX [41;31m[[41;97
+mERROR[41;31m][0m 
+[1mTS2551: Property 
+'telephone' does not 
+exist on type 
+'Client'. Did you mean 
+'telephone_1'?[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/features/cr
+eneaux/creneaux.html:53
+4:73:
+[37m      534 Ôöé 
+...text-cyan-400">ƒô× 
+{{ modalSelectedClient(
+)[32m?.telepho[37mne 
+}}</span>
+          ÔòÁ          
+                       
+            
+[32m~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+CreneauxComponent.
+
+    src/app/features/cr
+eneaux/creneaux.ts:52:1
+5:
+[37m      52 Ôöé   
+templateUrl: [32m'./cr
+eneaux.html'[37m,
+         ÔòÁ           
+     [32m~~~~~~~~~~~~~
+~~~~[0m
+
+
+[31mX [41;31m[[41;97
+mERROR[41;31m][0m 
+[1mTS2551: Property 
+'telephone' does not 
+exist on type 
+'Client'. Did you mean 
+'telephone_1'?[0m 
+[1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/features/cr
+eneaux/creneaux.html:63
+9:98:
+[37m      639 Ôöé ... 
+font-mono text-sm">{{ m
+odalSelectedClient()?.
+[32mtelephone[37m 
+}}</span>
+          ÔòÁ          
+                       
+                 
+[32m~~~~~~~~~[0m
+
+  Error occurs in the 
+template of component 
+CreneauxComponent.
+
+    src/app/features/cr
+eneaux/creneaux.ts:52:1
+5:
+[37m      52 Ôöé   
+templateUrl: [32m'./cr
+eneaux.html'[37m,
+         ÔòÁ           
+     [32m~~~~~~~~~~~~~
+~~~~[0m
+
+[39m[22m

@@ -1,0 +1,33 @@
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m        [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mmain-ZVQ2A6PI.js[39m   [2m | [22m[2mmain[22m         [2m | [22m[36m131.03 kB[39m[2m | [22m               [36m32.31 kB[39m
+[32mchunk-HCN4WZBO.js[39m  [2m | [22m[2m-[22m            [2m | [22m[36m128.08 kB[39m[2m | [22m               [36m37.82 kB[39m
+[32mstyles-VF2IUD4K.css[39m[2m | [22m[2mstyles[22m       [2m | [22m [36m21.56 kB[39m[2m | [22m                [36m3.76 kB[39m
+[32mchunk-YMRQGIWI.js[39m  [2m | [22m[2m-[22m            [2m | [22m [36m18.43 kB[39m[2m | [22m                [36m4.95 kB[39m
+
+[1m [22m                  [2m | [22m[1mInitial total[22m[2m | [22m[1m299.10 kB[22m[2m | [22m               [1m78.85 kB[22m
+
+[1mLazy chunk files[22m   [2m | [22m[1mNames[22m        [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mchunk-2ZGPQFOU.js[39m  [2m | [22m[2mdashboard[22m    [2m | [22m [36m18.79 kB[39m[2m | [22m                [36m4.70 kB[39m
+[32mchunk-U3BCFH4U.js[39m  [2m | [22m[2mabonnements[22m  [2m | [22m[36m315 bytes[39m[2m | [22m              [36m315 bytes[39m
+[32mchunk-53XDKGZU.js[39m  [2m | [22m[2mcreneaux[22m     [2m | [22m[36m306 bytes[39m[2m | [22m              [36m306 bytes[39m
+[32mchunk-N57Z4NYE.js[39m  [2m | [22m[2mclients[22m      [2m | [22m[36m303 bytes[39m[2m | [22m              [36m303 bytes[39m
+[32mchunk-NVLJO7F2.js[39m  [2m | [22m[2mventes[22m       [2m | [22m[36m300 bytes[39m[2m | [22m              [36m300 bytes[39m
+
+Application bundle generation complete. [1.475 seconds] - 2026-03-12T22:54:28.872Z
+
+[1m[33m[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: Sidebar is not used within the template of AppComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/app.component.ts:9:26:
+[37m      9 │   imports: [RouterOutlet, [32mSidebar[37m, Navbar],
+        ╵                           [32m~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: Navbar is not used within the template of AppComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/app.component.ts:9:35:
+[37m      9 │   imports: [RouterOutlet, Sidebar, [32mNavbar[37m],
+        ╵                                    [32m~~~~~~[0m
+
+[39m[22m
+Output location: C:\Users\AROBAZ\ems-frontend\dist\ems-frontend
+

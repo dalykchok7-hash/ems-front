@@ -1,0 +1,112 @@
+<!-- Overlay sombre (clique pour fermer) -->
+<div class="sidebar-mobile-overlay" [class.open]="menuOpen" (click)="closeMenu()"></div>
+
+<div class="sidebar">
+
+  <!-- Logo + bouton hamburger -->
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-row">
+      <div class="sidebar-logo-box">⚡</div>
+      <span class="sidebar-logo-title">Pulse Lab</span>
+    </div>
+    <div class="sidebar-logo-sub">EMS Studio Pro</div>
+
+    <!-- Bouton hamburger (visible uniquement mobile) -->
+    <button class="sidebar-mobile-toggle" [class.open]="menuOpen" (click)="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav" [class.open]="menuOpen">
+
+    <div class="sidebar-nav-label">Tableau de Bord</div>
+
+    <a routerLink="/dashboard"
+       routerLinkActive="sidebar-nav-item--active"
+       class="sidebar-nav-item"
+       (click)="closeMenu()">
+      <span class="sidebar-nav-icon">📊</span>
+      Vue générale
+    </a>
+
+    <a routerLink="/creneaux"
+       routerLinkActive="sidebar-nav-item--active"
+       class="sidebar-nav-item"
+       (click)="closeMenu()">
+      <span class="sidebar-nav-icon">📅</span>
+      Créneaux
+      <span class="sidebar-nav-badge sidebar-nav-badge--red">3</span>
+    </a>
+
+    <a routerLink="/clients"
+       routerLinkActive="sidebar-nav-item--active"
+       class="sidebar-nav-item"
+       (click)="closeMenu()">
+      <span class="sidebar-nav-icon">👥</span>
+      Clients
+      <span class="sidebar-nav-badge sidebar-nav-badge--blue">154</span>
+    </a>
+
+    <a routerLink="/abonnements"
+       routerLinkActive="sidebar-nav-item--active"
+       class="sidebar-nav-item"
+       (click)="closeMenu()">
+      <span class="sidebar-nav-icon">🎟️</span>
+      Abonnements
+    </a>
+
+    <div class="sidebar-nav-label">Gestion</div>
+
+    <a *ngIf="isAdmin()"
+   routerLink="/produits"
+   routerLinkActive="sidebar-nav-item--active"
+   class="sidebar-nav-item"
+   (click)="closeMenu()">
+  <span class="sidebar-nav-icon">📦</span>
+  Produits
+</a>
+
+    <a routerLink="/ventes"
+       routerLinkActive="sidebar-nav-item--active"
+       class="sidebar-nav-item"
+       (click)="closeMenu()">
+      <span class="sidebar-nav-icon">💰</span>
+      Ventes
+    </a>
+
+    <div class="sidebar-nav-label">Administration</div>
+
+    <a *ngIf="isAdmin()"
+   routerLink="/personnel"
+   routerLinkActive="sidebar-nav-item--active"
+   class="sidebar-nav-item"
+   (click)="closeMenu()">
+  <span class="sidebar-nav-icon">👤</span>
+  Personnel
+</a>
+
+    <a routerLink="/historique"
+       routerLinkActive="sidebar-nav-item--active"
+       class="sidebar-nav-item"
+       (click)="closeMenu()">
+      <span class="sidebar-nav-icon">🕒</span>
+      Historique
+    </a>
+
+  </nav>
+
+  <!-- Footer -->
+  <div class="sidebar-footer" [class.open]="menuOpen">
+    <div class="sidebar-online">
+      <div class="sidebar-online-dot"></div>
+      <div>
+        <div class="sidebar-online-title">Studio en ligne</div>
+        <div class="sidebar-online-sub">Sync: maintenant</div>
+      </div>
+    </div>
+  </div>
+
+</div>

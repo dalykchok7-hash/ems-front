@@ -1,0 +1,307 @@
+<!-- ══ TOAST ══════════════════════════════════════════════════════ -->
+<div *ngIf="toast().visible"
+     class="toast"
+     [class.toast--success]="toast().type === 'success'"
+     [class.toast--warning]="toast().type === 'warning'"
+     [class.toast--info]="toast().type === 'info'">
+  <span>{{ toast().type === 'success' ? '✅' : toast().type === 'warning' ? '⚠️' : 'ℹ️' }}</span>
+  {{ toast().message }}
+</div>
+
+<!-- ══ PAGE ════════════════════════════════════════════════════════ -->
+<div class="ventes-page">
+
+  <!-- ── Navigation Caisse / Historique ── -->
+  <div class="view-nav">
+    <button class="view-btn"
+            [class.view-btn--active]="activeView() === 'caisse'"
+            (click)="setView('caisse')">
+      🛒 Caisse
+    </button>
+    <button class="view-btn"
+            [class.view-btn--active]="activeView() === 'historique'"
+            (click)="setView('historique')">
+      📋 Historique des ventes
+      <span *ngIf="totalVentes() > 0" class="view-badge">{{ totalVentes() }}</span>
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       VUE CAISSE
+  ══════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeView() === 'caisse'" class="caisse-layout">
+
+    <!-- ── Colonne gauche : grille produits ── -->
+    <div class="produits-col">
+
+      <!-- Toolbar recherche + filtre -->
+      <div class="produits-toolbar">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input"
+                 placeholder="Rechercher un produit..."
+                 [(ngModel)]="searchValue"/>
+        </div>
+        <div class="type-filters">
+          <button class="type-flt"
+                  [class.type-flt--active]="filterType() === 'tous'"
+                  (click)="setFilterType('tous')">Tous</button>
+          <button *ngFor="let t of typesDisponibles()"
+                  class="type-flt"
+                  [class.type-flt--active]="filterType() === t"
+                  (click)="setFilterType(t)">
+            {{ getTypeIcon(t) }} {{ t }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="isLoadingProduits()" class="loading-state">
+        <div class="loading-spinner"></div>
+        <span>Chargement des produits...</span>
+      </div>
+
+      <!-- Grille produits -->
+      <div *ngIf="!isLoadingProduits()" class="produits-grid">
+        <div *ngFor="let p of produitsFiltres()"
+             class="produit-card"
+             [class.produit-card--in-panier]="isInPanier(p.id)"
+             [class.produit-card--rupture]="p.stock === 0"
+             (click)="ajouterAuPanier(p)">
+
+          <!-- Quantité dans le panier -->
+          <div *ngIf="isInPanier(p.id)" class="panier-qty-badge">
+            {{ getQuantitePanier(p.id) }}
+          </div>
+
+          <!-- Stock badge -->
+          <div class="stock-chip"
+               [style.color]="getStockColor(p)"
+               [style.background]="getStockColor(p) + '18'"
+               [style.border]="'1px solid ' + getStockColor(p) + '30'">
+            {{ p.stock === 0 ? 'Rupture' : p.stock_faible ? '⚠️ ' + p.stock : p.stock + ' en stock' }}
+          </div>
+
+          <!-- Icône type -->
+          <div class="produit-icon"
+               [style.background]="getTypeColor(p.type) + '15'"
+               [style.border]="'1px solid ' + getTypeColor(p.type) + '25'">
+            {{ getTypeIcon(p.type) }}
+          </div>
+
+          <div class="produit-nom">{{ p.nom }}</div>
+          <div class="produit-type" [style.color]="getTypeColor(p.type)">
+            {{ p.type_label || p.type }}
+          </div>
+          <div class="produit-prix">
+            {{ formatPrix(p.prix_unitaire) }}
+          </div>
+
+          <!-- Overlay rupture -->
+          <div *ngIf="p.stock === 0" class="rupture-overlay">
+            Rupture de stock
+          </div>
+
+        </div>
+
+        <div *ngIf="produitsFiltres().length === 0" class="produits-empty">
+          <span>📦</span>
+          <span>Aucun produit disponible</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Colonne droite : panier ── -->
+    <div class="panier-col">
+
+      <div class="panier-header">
+        <div class="panier-title">
+          🛒 Panier
+          <span *ngIf="totalArticles() > 0" class="panier-count">{{ totalArticles() }}</span>
+        </div>
+        <button *ngIf="panier().length > 0"
+                class="panier-vider"
+                (click)="viderPanier()">
+          🗑 Vider
+        </button>
+      </div>
+
+      <!-- Panier vide -->
+      <div *ngIf="panier().length === 0" class="panier-empty">
+        <div class="panier-empty-icon">🛒</div>
+        <div class="panier-empty-text">Panier vide</div>
+        <div class="panier-empty-sub">Cliquez sur un produit pour l'ajouter</div>
+      </div>
+
+      <!-- Lignes du panier -->
+      <div class="panier-list">
+        <div *ngFor="let ligne of panier()" class="panier-item">
+          <div class="panier-item-info">
+            <div class="panier-item-nom">{{ ligne.produit_nom }}</div>
+            <div class="panier-item-prix-unit">{{ formatPrix(ligne.prix_unitaire) }} / unité</div>
+          </div>
+
+          <!-- Contrôles quantité -->
+          <div class="panier-qty-ctrl">
+            <button class="qty-btn" (click)="decrementerQuantite(ligne.produit_id)">−</button>
+            <span class="qty-val">{{ ligne.quantite }}</span>
+            <button class="qty-btn" (click)="incrementerQuantite(ligne.produit_id)">+</button>
+          </div>
+
+          <div class="panier-item-total">{{ formatPrix(ligne.prix_total) }}</div>
+
+          <button class="panier-item-del"
+                  (click)="retirerDuPanier(ligne.produit_id)">✕</button>
+        </div>
+      </div>
+
+      <!-- Total & Confirmation -->
+      <div *ngIf="panier().length > 0" class="panier-footer">
+        <div class="panier-separator"></div>
+
+        <div class="panier-total-row">
+          <div class="panier-total-detail">
+            <div class="panier-total-label">{{ totalArticles() }} article(s)</div>
+          </div>
+          <div class="panier-total-val">{{ formatPrix(totalPanier()) }}</div>
+        </div>
+
+        <button class="btn-confirmer"
+                [class.btn-confirmer--loading]="isCreatingVente()"
+                [disabled]="isCreatingVente()"
+                (click)="confirmerVente()">
+          <span *ngIf="!isCreatingVente()">✓ Confirmer la vente — {{ formatPrix(totalPanier()) }}</span>
+          <span *ngIf="isCreatingVente()">⏳ Enregistrement...</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       VUE HISTORIQUE
+  ══════════════════════════════════════════════════════════════ -->
+  <div *ngIf="activeView() === 'historique'" class="historique-layout">
+
+    <!-- KPIs jour -->
+    <div class="hist-kpis">
+      <div class="hist-kpi">
+        <div class="hist-kpi-icon">🧾</div>
+        <div>
+          <div class="hist-kpi-val">{{ totalVentes() }}</div>
+          <div class="hist-kpi-label">Ventes</div>
+        </div>
+      </div>
+      <div class="hist-kpi">
+        <div class="hist-kpi-icon">💰</div>
+        <div>
+          <div class="hist-kpi-val" style="color:#22c55e">
+            {{ totalRevenuJour().toLocaleString('fr-FR', {maximumFractionDigits:2}) }} DT
+          </div>
+          <div class="hist-kpi-label">Revenue</div>
+        </div>
+      </div>
+      <div class="hist-kpi">
+        <div class="hist-kpi-icon">📦</div>
+        <div>
+          <div class="hist-kpi-val">{{ nbArticlesVendus() }}</div>
+          <div class="hist-kpi-label">Articles vendus</div>
+        </div>
+      </div>
+      <div class="hist-kpi">
+        <div class="hist-kpi-icon">🧮</div>
+        <div>
+          <div class="hist-kpi-val" style="color:#3b82f6">
+            {{ totalVentes() > 0 ? formatPrix(totalRevenuJour() / totalVentes()) : '0 DT' }}
+          </div>
+          <div class="hist-kpi-label">Panier moyen</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtres date -->
+    <div class="hist-toolbar">
+      <div class="date-filters">
+        <button class="date-flt"
+                [class.date-flt--active]="filterDate() === 'today'"
+                (click)="setFilterDate('today')">📅 Aujourd'hui</button>
+        <button class="date-flt"
+                [class.date-flt--active]="filterDate() === 'week'"
+                (click)="setFilterDate('week')">📆 Tout</button>
+      </div>
+      <!-- Date personnalisée -->
+      <div class="date-custom">
+        <label class="date-custom-label">Date :</label>
+        <input type="date" class="date-input"
+               [(ngModel)]="datePersonnalisee"
+               (change)="onDatePersonnaliseeChange()">
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoadingVentes()" class="loading-state">
+      <div class="loading-spinner"></div>
+      <span>Chargement des ventes...</span>
+    </div>
+
+    <!-- Liste ventes -->
+    <div *ngIf="!isLoadingVentes()" class="ventes-list">
+
+      <div *ngIf="ventes().length === 0" class="hist-empty">
+        <div class="hist-empty-icon">🧾</div>
+        <div class="hist-empty-title">Aucune vente pour cette période</div>
+        <div class="hist-empty-sub">Passez à la caisse pour enregistrer une vente</div>
+      </div>
+
+      <div *ngFor="let vente of ventes()"
+           class="vente-item"
+           [class.vente-item--open]="selectedVenteId() === vente.id"
+           (click)="selectVente(vente.id)">
+
+        <!-- Ligne résumé -->
+        <div class="vente-header">
+          <div class="vente-left">
+            <div class="vente-icon">🧾</div>
+            <div>
+              <div class="vente-id">Vente #{{ vente.id.substring(0, 8) }}</div>
+              <div class="vente-meta">
+                <span>{{ formatHeure(vente.created_at) }}</span>
+                <span class="vente-sep">·</span>
+                <span>{{ formatDateFR(vente.created_at) }}</span>
+                <span *ngIf="vente.personnel_nom" class="vente-sep">·</span>
+                <span *ngIf="vente.personnel_nom" style="color:var(--cyan)">
+                  👤 {{ vente.personnel_nom }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="vente-right">
+            <div class="vente-total">{{ formatPrix(vente.montant_total) }}</div>
+            <div class="vente-articles">{{ vente.lignes.reduce((sum, l) => sum + l.quantite, 0) }} art.</div>
+            <div class="vente-chevron">{{ selectedVenteId() === vente.id ? '▲' : '▼' }}</div>
+          </div>
+        </div>
+
+        <!-- Détail lignes (expandable) -->
+        <div *ngIf="selectedVenteId() === vente.id" class="vente-detail">
+          <div class="vente-lignes-title">Articles vendus</div>
+          <div class="vente-lignes-list">
+            <div *ngFor="let ligne of vente.lignes" class="vente-ligne">
+              <div class="vl-nom">{{ ligne.produit_nom || 'Produit' }}</div>
+              <div class="vl-qty">× {{ ligne.quantite }}</div>
+              <div class="vl-pu">{{ formatPrix(ligne.prix_unitaire) }} /u</div>
+              <div class="vl-total">{{ formatPrix(ligne.prix_total) }}</div>
+            </div>
+          </div>
+          <div class="vente-total-detail">
+            <span>Total</span>
+            <span style="color:#22c55e;font-weight:800">{{ formatPrix(vente.montant_total) }}</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>

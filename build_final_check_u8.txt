@@ -1,0 +1,137 @@
+﻿
+> ems-frontend@0.0.0 build
+> ng build
+
+[33mÔØ»[39m Building...
+[32mÔ£ö[39m Building...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m        [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mscripts-DC36RK3P.js[39m[2m | [22m[2mscripts[22m      [2m | [22m[36m208.66 kB[39m[2m | [22m               [36m63.16 kB[39m
+[32mchunk-N76Y2DQV.js[39m  [2m | [22m[2m-[22m            [2m | [22m[36m146.37 kB[39m[2m | [22m               [36m43.07 kB[39m
+[32mchunk-NELQHNIJ.js[39m  [2m | [22m[2m-[22m            [2m | [22m [36m84.80 kB[39m[2m | [22m               [36m21.47 kB[39m
+[32mmain-3HBZ65OX.js[39m   [2m | [22m[2mmain[22m         [2m | [22m [36m50.45 kB[39m[2m | [22m                [36m5.86 kB[39m
+[32mchunk-XY442EIV.js[39m  [2m | [22m[2m-[22m            [2m | [22m [36m32.88 kB[39m[2m | [22m                [36m7.10 kB[39m
+[32mstyles-G5FRKJJV.css[39m[2m | [22m[2mstyles[22m       [2m | [22m [36m23.27 kB[39m[2m | [22m                [36m3.42 kB[39m
+[32mchunk-VKPHCMFN.js[39m  [2m | [22m[2m-[22m            [2m | [22m [36m19.48 kB[39m[2m | [22m                [36m5.80 kB[39m
+[32mchunk-6MRRHJJE.js[39m  [2m | [22m[2m-[22m            [2m | [22m [36m18.49 kB[39m[2m | [22m                [36m5.29 kB[39m
+
+[1m [22m                  [2m | [22m[1mInitial total[22m[2m | [22m[1m[93m584.39 kB[39m[22m[2m | [22m              [1m155.17 kB[22m
+
+[1mLazy chunk files[22m   [2m | [22m[1mNames[22m        [2m | [22m [1mRaw size[22m[2m | [22m[1mEstimated transfer size[22m
+[32mchunk-ILJJ56FP.js[39m  [2m | [22m[2mdashboard[22m    [2m | [22m [36m90.27 kB[39m[2m | [22m               [36m12.06 kB[39m
+[32mchunk-73FBZEPW.js[39m  [2m | [22m[2mcreneaux[22m     [2m | [22m [36m66.54 kB[39m[2m | [22m               [36m13.23 kB[39m
+[32mchunk-BMBO2FNL.js[39m  [2m | [22m[2mabonnements[22m  [2m | [22m [36m63.96 kB[39m[2m | [22m               [36m11.80 kB[39m
+[32mchunk-LCTZBZMN.js[39m  [2m | [22m[2mclients[22m      [2m | [22m [36m51.37 kB[39m[2m | [22m                [36m9.70 kB[39m
+[32mchunk-F35C46PS.js[39m  [2m | [22m[2mpersonnel[22m    [2m | [22m [36m27.01 kB[39m[2m | [22m                [36m6.36 kB[39m
+[32mchunk-XZW4VCD5.js[39m  [2m | [22m[2mhistorique[22m   [2m | [22m [36m26.07 kB[39m[2m | [22m                [36m4.80 kB[39m
+[32mchunk-YSAPZNLI.js[39m  [2m | [22m[2m-[22m            [2m | [22m  [36m3.12 kB[39m[2m | [22m              [36m750 bytes[39m
+[32mchunk-3DNC3HEZ.js[39m  [2m | [22m[2mventes[22m       [2m | [22m[36m300 bytes[39m[2m | [22m              [36m300 bytes[39m
+
+Application bundle generation complete. [4.025 seconds] - 2026-03-27T10:42:06.995Z
+
+node.exe : 
+[1m[33m[33mÔû▓ [43;
+33m[[43;30mWARNING[43
+;33m][0m [1mbundle 
+initial exceeded 
+maximum budget. Budget 
+500.00 kB was not met 
+by 84.39 kB with a 
+total of 584.39 kB.[0m
+Au caractère Ligne:1 : 
+1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : 
+NotSpecified    : 
+([1m[33m[33mÔ.    
+.. 584.39 kB.[0m:S    
+tring) [], RemoteEx    
+ception
+    + 
+FullyQualifiedErr    
+orId : NativeComman    
+dError
+ 
+
+
+[33mÔû▓ [43;33m[[43;
+30mWARNING[43;33m][0m
+ [1msrc/app/features/c
+reneaux/creneaux.css 
+exceeded maximum 
+budget. Budget 20.00 
+kB was not met by 3.99 
+kB with a total of 
+23.99 kB.[0m
+
+
+[33mÔû▓ [43;33m[[43;
+30mWARNING[43;33m][0m
+ [1mcss-inline-fonts:h
+ttps://fonts.googleapis
+.com/css2?family=Outfit
+:wght@300;400;500;600;7
+00;800&family=JetBrains
++Mono:wght@400;500;600&
+display=swap exceeded 
+maximum budget. Budget 
+20.00 kB was not met 
+by 1.43 kB with a 
+total of 21.43 kB.[0m
+
+
+[33mÔû▓ [43;33m[[43;
+30mWARNING[43;33m][0m
+ [1mcss-inline-fonts:h
+ttps://fonts.googleapis
+.com/css2?family=Outfit
+:wght@300;400;500;600;7
+00;800&family=JetBrains
++Mono:wght@400;500;600&
+display=swap exceeded 
+maximum budget. Budget 
+20.00 kB was not met 
+by 4.08 kB with a 
+total of 24.08 kB.[0m
+
+
+[33mÔû▓ [43;33m[[43;
+30mWARNING[43;33m][0m
+ [1mcss-inline-fonts:h
+ttps://fonts.googleapis
+.com/css2?family=Outfit
+:wght@300;400;500;600;7
+00;800&family=JetBrains
++Mono:wght@400;500;600&
+display=swap exceeded 
+maximum budget. Budget 
+20.00 kB was not met 
+by 7.59 kB with a 
+total of 27.59 kB.[0m
+
+
+[33mÔû▓ [43;33m[[43;
+30mWARNING[43;33m][0m
+ [1mcss-inline-fonts:h
+ttps://fonts.googleapis
+.com/css2?family=Outfit
+:wght@300;400;500;600;7
+00;800&family=JetBrains
++Mono:wght@400;500;600&
+display=swap exceeded 
+maximum budget. Budget 
+20.00 kB was not met 
+by 1.25 kB with a 
+total of 21.25 kB.[0m
+
+[39m[22m
+Output location: C:\Users\AROBAZ\ems-frontend\dist\ems-frontend
+

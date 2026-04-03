@@ -1,0 +1,476 @@
+<!-- ══ TOAST ══════════════════════════════════════════════════════ -->
+<div *ngIf="toast().visible"
+     class="toast"
+     [class.toast--success]="toast().type === 'success'"
+     [class.toast--warning]="toast().type === 'warning'"
+     [class.toast--info]="toast().type === 'info'">
+  <span>{{ toast().type === 'success' ? '✅' : toast().type === 'warning' ? '⚠️' : 'ℹ️' }}</span>
+  {{ toast().message }}
+</div>
+
+<!-- ══ PAGE ════════════════════════════════════════════════════════ -->
+<div class="dash-page">
+
+  <!-- Loading bar -->
+  <div *ngIf="isLoading()" class="loading-bar">
+    <div class="loading-fill"></div>
+  </div>
+
+  <!-- ── TOP BAR ─────────────────────────────────────────────── -->
+  <div class="dash-topbar">
+    <div class="dash-date">{{ formattedDate() }}</div>
+    <button class="btn-change-pwd" (click)="openPasswordModal()">
+      🔐 Changer mot de passe
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       BLOC 1 — REVENUE
+       Layout: [Jour | Mois | Annuel] + [Overview chart | Donut par type]
+  ══════════════════════════════════════════════════════════════════ -->
+  <div class="section-label">📊 Revenue</div>
+
+  <!-- Revenue cards row: Jour / Mois / Annuel -->
+  <div class="revenue-cards-row">
+    <div *ngFor="let bloc of revenueBlocs()"
+         class="rev-bloc"
+         [style.border-left-color]="bloc.color">
+
+      <!-- Header -->
+      <div class="rev-bloc-header">
+        <div class="rev-bloc-icon"
+             [style.background]="bloc.bgColor"
+             [style.border]="'1px solid ' + bloc.borderColor"
+             [style.color]="bloc.color">
+          {{ bloc.icon }}
+        </div>
+        <div>
+          <div class="rev-bloc-label">{{ bloc.label }}</div>
+          <div class="rev-bloc-total" [style.color]="bloc.color">
+            {{ formatRevenu(bloc.total) }}
+            <span class="rev-bloc-unit">DT</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-split: Abonnements vs Ventes -->
+      <div class="rev-bloc-split">
+
+        <!-- Abonnements -->
+        <div class="rev-split-item">
+          <div class="rev-split-top">
+            <span class="rev-split-label">🎟️ Abonnements</span>
+            <span class="rev-split-pct" style="color:var(--green)">
+              {{ getBlocAboPercent(bloc) }}%
+            </span>
+          </div>
+          <div class="rev-split-val" style="color:var(--green)">
+            {{ formatRevenu(bloc.abonnements) }}
+            <span class="rev-split-unit">DT</span>
+          </div>
+          <div class="rev-pct-bar">
+            <div class="rev-pct-fill rev-pct-fill--abo"
+                 [style.width.%]="getBlocAboPercent(bloc)"></div>
+          </div>
+        </div>
+
+        <div class="rev-split-sep"></div>
+
+        <!-- Ventes -->
+        <div class="rev-split-item">
+          <div class="rev-split-top">
+            <span class="rev-split-label">💊 Ventes</span>
+            <span class="rev-split-pct" style="color:var(--purple)">
+              {{ getBlocVentePercent(bloc) }}%
+            </span>
+          </div>
+          <div class="rev-split-val" style="color:var(--purple)">
+            {{ formatRevenu(bloc.ventes) }}
+            <span class="rev-split-unit">DT</span>
+          </div>
+          <div class="rev-pct-bar">
+            <div class="rev-pct-fill rev-pct-fill--ventes"
+                 [style.width.%]="getBlocVentePercent(bloc)"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Revenue Overview (chart) + Revenue par type (donut) -->
+  <div class="charts-row">
+
+    <!-- Revenue Overview -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          📈 Revenue Overview
+          <div class="chart-tabs">
+            <button *ngFor="let m of chartModes"
+                    class="chart-tab"
+                    [class.chart-tab--active]="activeChartMode() === m.key"
+                    (click)="setChartMode(m.key)">
+              {{ m.label }}
+            </button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div *ngIf="isLoading()" class="chart-loading-dot"></div>
+          <button class="card-link" (click)="showToast('Export en cours','info')">📤 Exporter</button>
+        </div>
+      </div>
+
+      <div *ngIf="!isLoading() && CHART_DATA[activeChartMode()].labels.length === 0"
+           class="chart-no-data">
+        <span>📊</span>
+        <span>Aucune donnée disponible pour cette période</span>
+      </div>
+
+      <div class="chart-body">
+        <canvas #revenueCanvas></canvas>
+      </div>
+      <div class="chart-footer">
+        <div *ngFor="let stat of chartFooterStats()" class="chart-stat">
+          <div class="chart-stat-label">{{ stat.label }}</div>
+          <div class="chart-stat-value" [style.color]="stat.color">{{ stat.value }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue par type (donut) -->
+    <div class="card donut-card">
+      <div class="card-header" style="border-bottom:none; padding-bottom:4px">
+        <div class="card-title">🍩 Revenue par Type</div>
+      </div>
+      <div *ngIf="abonnementsParType().length === 0" class="donut-empty">
+        <span style="font-size:11px;color:var(--t3)">Données en chargement...</span>
+      </div>
+      <div *ngIf="abonnementsParType().length > 0" class="donut-wrap">
+        <div class="donut-canvas-wrap">
+          <canvas #donutCanvas width="90" height="90"></canvas>
+          <div class="donut-center">
+            <div class="donut-pct">{{ abonnementsParType()[0]?.pourcentage || 0 }}%</div>
+            <div class="donut-sub">{{ abonnementsParType()[0]?.label || '' }}</div>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <div *ngFor="let item of abonnementsParType(); let i = index" class="legend-item">
+            <div class="legend-left">
+              <div class="legend-dot" [style.background]="getDonutColor(i)"></div>
+              <span class="legend-text">{{ item.label }}</span>
+            </div>
+            <span class="legend-value">{{ item.pourcentage }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       BLOC 2 — ALERTES & CLIENTS
+       Layout: [Expirations abonnements | Stock faible | Clients]
+  ══════════════════════════════════════════════════════════════════ -->
+  <div class="section-label" style="margin-top:4px">⚠️ Alertes &amp; Clients</div>
+
+  <div class="alerts-row">
+
+    <!-- Expirations abonnements -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          🎟️ Expirations Abonnements
+          <span class="badge badge--red">{{ expiringAbos().length }}</span>
+        </div>
+        <button class="card-link" (click)="naviguerVersAbonnements()">Voir tout</button>
+      </div>
+      <div *ngIf="expiringAbos().length === 0" class="empty-mini">
+        <span style="font-size:11px;color:var(--green)">✅ Aucune expiration proche</span>
+      </div>
+      <div class="expiry-list">
+        <div *ngFor="let abo of expiringAbos()" class="expiry-item">
+          <div class="expiry-avatar" [style.background]="abo.avatar_color">{{ abo.initials }}</div>
+          <div class="expiry-info">
+            <div class="expiry-name">{{ abo.nom }}</div>
+            <div class="expiry-type">{{ abo.type }}</div>
+            <div class="expiry-bar">
+              <div class="expiry-bar-fill"
+                   [style.width.%]="abo.bar_percent"
+                   [style.background]="getExpiryColor(abo.seances_restantes)"></div>
+            </div>
+          </div>
+          <div class="expiry-days">
+            <div class="expiry-days-num" [style.color]="getExpiryColor(abo.seances_restantes)">
+              {{ abo.seances_restantes }}
+            </div>
+            <div class="expiry-days-label">séances</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stock faible -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          📦 Stock Faible
+          <span *ngIf="produitsAlerte().length > 0"
+                class="badge badge--amber">{{ produitsAlerte().length }} alertes</span>
+          <span *ngIf="produitsAlerte().length === 0"
+                class="badge badge--green">OK</span>
+        </div>
+        <button class="card-link" (click)="naviguerVersProduits()">Gérer →</button>
+      </div>
+      <div *ngIf="produitsAlerte().length === 0" class="empty-mini">
+        <span style="font-size:11px;color:var(--green)">✅ Tous les stocks sont suffisants</span>
+      </div>
+      <div class="produit-alerte-list">
+        <div *ngFor="let p of produitsAlerte()" class="produit-alerte-item">
+          <div class="pa-icon"
+               [style.background]="getProduitStockColor(p) + '18'"
+               [style.border]="'1px solid ' + getProduitStockColor(p) + '30'">
+            {{ p.stock === 0 ? '🚨' : '⚠️' }}
+          </div>
+          <div class="pa-info">
+            <div class="pa-nom">{{ p.nom }}</div>
+            <div class="pa-type">{{ p.type }}</div>
+          </div>
+          <div class="pa-stock">
+            <div class="pa-stock-val" [style.color]="getProduitStockColor(p)">{{ p.stock }}</div>
+            <div class="pa-stock-label">/ min {{ p.seuil_alerte }}</div>
+            <div class="pa-statut" [style.color]="getProduitStockColor(p)">{{ getProduitStockLabel(p) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clients -->
+    <div class="card" (click)="naviguerVersClients()" style="cursor:pointer">
+      <div class="card-header">
+        <div class="card-title">👥 Clients</div>
+        <button class="card-link" (click)="naviguerVersClients()">Voir tout</button>
+      </div>
+
+      <!-- Total big number -->
+      <div class="clients-total-wrap">
+        <div class="clients-total-num">{{ clientStats().total }}</div>
+        <div class="clients-total-label">clients au total</div>
+      </div>
+
+      <!-- Actifs / Inactifs -->
+      <div class="clients-split">
+        <div class="clients-split-item clients-split-item--actif">
+          <div class="clients-split-icon">🟢</div>
+          <div>
+            <div class="clients-split-val">{{ clientStats().actifs }}</div>
+            <div class="clients-split-label">Actifs</div>
+          </div>
+          <div class="clients-split-pct" style="color:var(--green)">
+            {{ clientStats().total ? ((clientStats().actifs / clientStats().total) * 100 | number:'1.0-0') : 0 }}%
+          </div>
+        </div>
+
+        <div class="clients-split-divider"></div>
+
+        <div class="clients-split-item clients-split-item--inactif">
+          <div class="clients-split-icon">⚫</div>
+          <div>
+            <div class="clients-split-val">{{ clientStats().inactifs }}</div>
+            <div class="clients-split-label">Inactifs</div>
+          </div>
+          <div class="clients-split-pct" style="color:var(--t3)">
+            {{ clientStats().total ? ((clientStats().inactifs / clientStats().total) * 100 | number:'1.0-0') : 0 }}%
+          </div>
+        </div>
+      </div>
+
+      <!-- Ratio bar -->
+      <div class="clients-ratio-bar-wrap">
+        <div class="clients-ratio-bar">
+          <div class="clients-ratio-fill"
+               [style.width.%]="clientStats().total ? (clientStats().actifs / clientStats().total) * 100 : 0">
+          </div>
+        </div>
+        <div class="clients-ratio-labels">
+          <span style="color:var(--green);font-size:9px">Actifs</span>
+          <span style="color:var(--t3);font-size:9px">Inactifs</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       BLOC 3 — SÉANCES DU JOUR
+  ══════════════════════════════════════════════════════════════════ -->
+  <div class="section-label" style="margin-top:4px">📅 Séances du Jour</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        📅 Séances du Jour
+        <span class="badge">{{ currentDate() | date:'EEE d MMM' : '' : 'fr' }}</span>
+      </div>
+      <button class="card-link" (click)="naviguerVersCreneaux()">Voir planning complet →</button>
+    </div>
+
+    <div *ngIf="seancesJour.length === 0" class="empty-mini" style="padding:16px 20px">
+      <span style="font-size:11px;color:var(--t3)">Aucune séance planifiée pour aujourd'hui</span>
+    </div>
+
+    <div *ngIf="seancesJour.length > 0" class="table-scroll">
+      <table class="sessions-table">
+        <thead>
+          <tr>
+            <th>Heure</th>
+            <th>Réservations</th>
+            <th>Appareils</th>
+            <th>Dispo</th>
+            <th>Taux</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of seancesJour" class="session-row">
+            <td><span class="time-mono">{{ s.heure_debut }} – {{ s.heure_fin }}</span></td>
+            <td>
+              <div class="progress-wrap">
+                <div class="progress-bar">
+                  <div class="progress-fill"
+                       [style.width.%]="getOccupancyPercent(s)"
+                       [style.background]="getBarColor(s)"></div>
+                </div>
+                <span class="progress-text">{{ s.reservations }}/{{ s.places_total }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="devices-wrap">
+                <span *ngIf="s.i_motion > 0" class="device-chip device-chip--motion">⚡ {{ s.i_motion }}</span>
+                <span *ngIf="s.i_model > 0"  class="device-chip device-chip--model">🔷 {{ s.i_model }}</span>
+                <span *ngIf="s.reservations === 0" class="no-device">—</span>
+              </div>
+            </td>
+            <td>
+              <span class="dispo-num"
+                    [style.color]="s.disponibles === 0 ? '#f87171' : '#22c55e'">
+                {{ s.disponibles }}
+              </span>
+            </td>
+            <td>
+              <div class="taux-wrap">
+                <div class="taux-bar">
+                  <div class="taux-fill"
+                       [style.width.%]="getOccupancyPercent(s)"
+                       [style.background]="getBarColor(s)"></div>
+                </div>
+                <span class="taux-txt">{{ getOccupancyPercent(s) }}%</span>
+              </div>
+            </td>
+            <td>
+              <span class="statut-pill" [ngClass]="getStatutClass(s)">
+                {{ getStatutLabel(s) }}
+              </span>
+            </td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn action-btn--blue"
+                        (click)="naviguerVersCreneaux(s)">Gérer</button>
+                <button *ngIf="s.disponibles > 0"
+                        class="action-btn action-btn--green"
+                        (click)="ajouterReservation(s)">+ Réserver</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ MODAL CHANGER MOT DE PASSE ════════════════════════════ -->
+<div *ngIf="showPasswordModal()" class="pwd-modal-backdrop" (click)="closePasswordModal()">
+  <form class="pwd-modal-box" (click)="$event.stopPropagation()" (ngSubmit)="savePassword()">
+
+    <!-- Header -->
+    <div class="pwd-modal-header">
+      <div>
+        <div class="pwd-modal-title">🔐 Modifier le mot de passe</div>
+        <div class="pwd-modal-sub">Admin — changement de mot de passe sécurisé</div>
+      </div>
+      <button type="button" class="pwd-modal-close" (click)="closePasswordModal()">✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="pwd-modal-body">
+
+      <!-- Erreur inline -->
+      <div *ngIf="passwordError()" class="pwd-error">
+        <span>⚠️</span> {{ passwordError() }}
+      </div>
+
+      <!-- Ancien mot de passe -->
+      <div class="pwd-field">
+        <label class="pwd-label">Mot de passe actuel *</label>
+        <input
+          type="password"
+          name="old_password"
+          class="pwd-input"
+          placeholder="Saisir votre mot de passe actuel"
+          [(ngModel)]="passwordForm.old_password"
+          autocomplete="current-password" />
+      </div>
+
+      <!-- Nouveau mot de passe -->
+      <div class="pwd-field">
+        <label class="pwd-label">Nouveau mot de passe *</label>
+        <input
+          type="password"
+          name="new_password"
+          class="pwd-input"
+          placeholder="Minimum 6 caractères"
+          [(ngModel)]="passwordForm.new_password"
+          autocomplete="new-password" />
+      </div>
+
+      <!-- Confirmer -->
+      <div class="pwd-field">
+        <label class="pwd-label">Confirmer le nouveau mot de passe *</label>
+        <input
+          type="password"
+          name="confirm_password"
+          class="pwd-input"
+          placeholder="Répéter le nouveau mot de passe"
+          [(ngModel)]="passwordForm.confirm_password"
+          autocomplete="new-password" />
+      </div>
+
+      <!-- Force indicator -->
+      <div *ngIf="passwordForm.new_password.length > 0" class="pwd-strength">
+        <div class="pwd-strength-bar">
+          <div class="pwd-strength-fill"
+            [style.width.%]="passwordForm.new_password.length >= 12 ? 100 : passwordForm.new_password.length >= 8 ? 66 : 33"
+            [style.background]="passwordForm.new_password.length >= 12 ? '#22d47c' : passwordForm.new_password.length >= 8 ? '#fbbf24' : '#ff6b6b'">
+          </div>
+        </div>
+        <span class="pwd-strength-label"
+          [style.color]="passwordForm.new_password.length >= 12 ? '#22d47c' : passwordForm.new_password.length >= 8 ? '#fbbf24' : '#ff6b6b'">
+          {{ passwordForm.new_password.length >= 12 ? 'Fort ✔' : passwordForm.new_password.length >= 8 ? 'Moyen' : 'Faible' }}
+        </span>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="pwd-modal-footer">
+      <button type="button" class="pwd-btn-cancel" (click)="closePasswordModal()" [disabled]="passwordLoading()">Annuler</button>
+      <button type="submit" class="pwd-btn-save" [disabled]="passwordLoading()">
+        <span *ngIf="passwordLoading()">⧗ Enregistrement...</span>
+        <span *ngIf="!passwordLoading()">✓ Mettre à jour</span>
+      </button>
+    </div>
+
+  </form>
+</div>

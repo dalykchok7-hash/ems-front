@@ -1,0 +1,588 @@
+<!-- ══ TOAST ══════════════════════════════════════════════════════ -->
+<div *ngIf="toast().visible"
+     class="toast"
+     [class.toast--success]="toast().type === 'success'"
+     [class.toast--warning]="toast().type === 'warning'"
+     [class.toast--info]="toast().type === 'info'">
+  <span>{{ toast().type === 'success' ? '✅' : toast().type === 'warning' ? '⚠️' : 'ℹ️' }}</span>
+  {{ toast().message }}
+</div>
+
+<!-- ══ PAGE ════════════════════════════════════════════════════════ -->
+<div class="clients-page">
+
+ 
+
+  <!-- ── Toolbar ── -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <!-- Search -->
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text"
+               class="search-input"
+               placeholder="Rechercher par nom, CIN, téléphone..."
+               [(ngModel)]="searchValue"/>
+      </div>
+      <!-- Filters -->
+      <div class="filter-group">
+        <button class="flt-btn" [class.flt-btn--active]="activeFilter() === 'tous'"    (click)="setFilter('tous')">Tous ({{ totalClients() }})</button>
+        <button class="flt-btn" [class.flt-btn--active]="activeFilter() === 'actif'"   (click)="setFilter('actif')">✅ Actifs</button>
+        <button class="flt-btn" [class.flt-btn--active]="activeFilter() === 'expire'"  (click)="setFilter('expire')">⚠️ Expirants</button>
+        <button class="flt-btn" [class.flt-btn--active]="activeFilter() === 'inactif'" (click)="setFilter('inactif')">⛔ Inactifs</button>
+      </div>
+    </div>
+    <button class="btn-add" (click)="openAddModal()">+ Nouveau Client</button>
+  </div>
+
+  <!-- ── Two panels ── -->
+  <div class="panels">
+
+    <!-- LEFT — Client list -->
+    <div class="left-panel">
+      <div class="lp-header">
+        <div class="lp-title">
+          👥 Clients
+          <span class="count-pill">{{ totalClients() }}</span>
+        </div>
+      </div>
+      <div class="client-list">
+        <div *ngFor="let c of filteredClients()"
+             class="client-item"
+             [class.client-item--selected]="isSelected(c.id)"
+             (click)="selectClient(c.id)">
+          
+          <div *ngIf="!c.photo" class="cl-avatar" [style.background]="c.avatar_color">
+            {{ getInitials(c) }}
+          </div>
+          <img *ngIf="c.photo" [src]="c.photo" class="cl-avatar" style="object-fit:cover; border:none; padding:0;">
+          
+          <div class="cl-info">
+            <div class="cl-name">{{ getFullName(c) }}</div>
+            <div class="cl-cin">{{ c.cin }}</div>
+          </div>
+          <div class="cl-badge">
+            <div class="status-dot"
+                 [class.status-dot--actif]="c.statut === 'actif'"
+                 [class.status-dot--expire]="c.statut === 'expire'"
+                 [class.status-dot--inactif]="c.statut === 'inactif'">
+            </div>
+          </div>
+        </div>
+        <div *ngIf="filteredClients().length === 0" class="cl-empty">
+          <div style="font-size:24px;margin-bottom:8px">🔍</div>
+          <div style="font-size:12px;color:var(--t3)">Aucun client trouvé</div>
+        </div>
+      </div>
+     <div class="lp-pagination" *ngIf="totalPages() > 1">
+  <button class="pag-btn"
+          [disabled]="currentPage() === 1"
+          (click)="previousPage()">←</button>
+
+  <span class="pag-info">
+    {{ currentPage() }} / {{ totalPages() }}
+  </span>
+
+  <button class="pag-btn"
+          [disabled]="currentPage() >= totalPages()"
+          (click)="nextPage()">→</button>
+</div>
+    </div>
+    
+
+    <!-- RIGHT — Client detail -->
+    <div class="right-panel">
+
+      <!-- Empty state -->
+      <ng-container *ngIf="!selectedClient(); else hasClient">
+        <div class="empty-state">
+          <div class="empty-icon">👥</div>
+          <div class="empty-title">Sélectionnez un client</div>
+          <div class="empty-sub">Cliquez sur un client dans la liste pour voir son profil</div>
+        </div>
+      </ng-container>
+
+      <ng-template #hasClient>
+
+        <!-- Profile card -->
+        <div class="profile-card">
+          <div class="profile-top">
+            
+            <div *ngIf="!selectedClient()!.photo" class="profile-avatar" [style.background]="selectedClient()!.avatar_color">
+              {{ getInitials(selectedClient()!) }}
+            </div>
+            <img *ngIf="selectedClient()!.photo" [src]="selectedClient()!.photo" class="profile-avatar" style="object-fit:cover; border:none; padding:0;">
+
+            <div class="profile-info-top">
+              <div class="profile-name">{{ getFullName(selectedClient()!) }}</div>
+              <div class="profile-cin">🪪 {{ selectedClient()!.cin }}</div>
+              <div class="profile-status-wrap">
+                <span class="statut-badge"
+                      [class.statut-badge--actif]="selectedClient()!.statut === 'actif'"
+                      [class.statut-badge--expire]="selectedClient()!.statut === 'expire'"
+                      [class.statut-badge--inactif]="selectedClient()!.statut === 'inactif'">
+                  <span class="statut-dot"></span>
+                  {{ getStatutLabel(selectedClient()!.statut) }}
+                </span>
+              </div>
+            </div>
+            <div class="profile-actions">
+              <button class="btn-edit" (click)="openEditModal()">✏️ Modifier</button>
+              <button class="btn-del"  (click)="deleteClient()">🗑 Supprimer</button>
+            </div>
+          </div>
+          <!-- Client details grid -->
+          <div class="profile-details">
+            <div class="pd-item">
+              <div class="pd-label">Téléphone</div>
+              <div class="pd-value pd-value--phone">📞 {{ selectedClient()!.telephone_1 }}</div>
+            </div>
+            <div class="pd-item">
+              <div class="pd-label">Email</div>
+              <div class="pd-value pd-value--small">{{ selectedClient()!.email }}</div>
+            </div>
+            <div class="pd-item">
+              <div class="pd-label">Date de naissance</div>
+              <div class="pd-value pd-value--mono">{{ selectedClient()!.date_naissance }}</div>
+            </div>
+            <div class="pd-item">
+              <div class="pd-label">Inscrit le</div>
+              <div class="pd-value pd-value--mono">{{ formatDate(selectedClient()!.created_at) }}</div>
+            </div>
+            <div class="pd-item">
+              <div class="pd-label">Séances totales</div>
+              <div class="pd-value" style="color:#c084fc;font-weight:800">
+                {{ getClientSessions(selectedClient()!.id) }}
+              </div>
+            </div>
+            <div class="pd-item">
+              <div class="pd-label">Abonnement actuel</div>
+              <div class="pd-value" style="color:#3b82f6;font-weight:700">
+                {{ activeAbo()?.type ?? '—' }}
+              </div>
+            </div>
+            <div class="pd-item" *ngIf="selectedClient()!.telephone_2">
+              <div class="pd-label">Téléphone 2</div>
+              <div class="pd-value pd-value--phone">📞 {{ selectedClient()!.telephone_2 }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom detail row -->
+        <div class="detail-row">
+
+          <!-- Abonnement card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🎟️ Abonnement</div>
+              <button class="card-link" (click)="renouvelerAbo()">🔄 Renouveler</button>
+            </div>
+            <div class="card-body">
+<!-- ── Navigation des onglets ── -->
+<div class="tabs-nav">
+  <button class="tab-btn"
+          [class.tab-btn--active]="activeTab() === 'abonnement'"
+          (click)="setTab('abonnement')">
+    🎟️ Abonnement actif
+  </button>
+  <button class="tab-btn"
+          [class.tab-btn--active]="activeTab() === 'historique_abo'"
+          (click)="setTab('historique_abo')">
+    📋 Historique abonnements
+    <span *ngIf="totalAbosClient() > 0" class="tab-badge">{{ totalAbosClient() }}</span>
+  </button>
+  <button class="tab-btn"
+          [class.tab-btn--active]="activeTab() === 'seances'"
+          (click)="setTab('seances')">
+    📅 Séances
+    <span *ngIf="totalSeancesClient() > 0" class="tab-badge">{{ totalSeancesClient() }}</span>
+  </button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     ONGLET 1 — ABONNEMENT ACTIF
+════════════════════════════════════════════════════════════════ -->
+<div *ngIf="activeTab() === 'abonnement'" class="tab-content">
+
+  <!-- Loading -->
+  <div *ngIf="isLoadingAbo()" class="tab-loading">
+    <div class="tab-spinner"></div>
+    <span>Chargement...</span>
+  </div>
+
+  <!-- Aucun abonnement actif -->
+  <div *ngIf="!isLoadingAbo() && !activeAbo()" class="tab-empty">
+    <div class="tab-empty-icon">🎟️</div>
+    <div class="tab-empty-title">Aucun abonnement actif</div>
+    <div class="tab-empty-sub">Ce client n'a pas d'abonnement en cours</div>
+  </div>
+
+  <!-- Abonnement actif -->
+  <div *ngIf="!isLoadingAbo() && activeAbo()" class="abo-actif-card">
+
+    <!-- Header abo -->
+    <div class="abo-header">
+      <div class="abo-type-badge">{{ activeAbo()!.type }}</div>
+      <span class="abo-statut" [ngClass]="getStatutAboClass(activeAbo()!.statut)">
+        <span class="statut-dot"></span>
+        {{ getStatutAboLabel(activeAbo()!.statut) }}
+      </span>
+    </div>
+
+    <!-- Progression séances -->
+    <div class="abo-progress-section">
+      <div class="abo-progress-info">
+        <span class="abo-progress-label">Séances utilisées</span>
+        <span class="abo-progress-count"
+              [style.color]="getAboProgressColor(aboProgressPercent())">
+          {{ (activeAbo()!.seances_utilisees ?? 0) }} / {{ activeAbo()!.seances_total }}
+        </span>
+      </div>
+      <div class="abo-progress-bar">
+        <div class="abo-progress-fill"
+             [style.width.%]="aboProgressPercent()"
+             [style.background]="getAboProgressColor(aboProgressPercent())">
+        </div>
+      </div>
+      <div class="abo-progress-restantes">
+        <span style="color:#22c55e;font-weight:700">{{ activeAbo()!.seances_restantes }}</span>
+        séances restantes
+      </div>
+    </div>
+
+    <!-- Infos détail -->
+    <div class="abo-details-grid">
+      <div class="abo-detail-item">
+        <div class="abo-detail-label">Début</div>
+        <div class="abo-detail-value">{{ formatDate(activeAbo()!.date_debut) }}</div>
+      </div>
+      <div class="abo-detail-item">
+        <div class="abo-detail-label">Expiration</div>
+        <div class="abo-detail-value"
+             [style.color]="activeAbo()!.statut === 'expire' ? '#f87171' : 'inherit'">
+          {{ formatDate(activeAbo()!.date_expiration) }}
+        </div>
+      </div>
+      <div class="abo-detail-item">
+        <div class="abo-detail-label">Paiement</div>
+        <div class="abo-detail-value">{{ getModeLabel(activeAbo()!.mode_paiement) }}</div>
+      </div>
+      <div class="abo-detail-item">
+        <div class="abo-detail-label">Prix payé</div>
+        <div class="abo-detail-value" [style.color]="activeAbo()!.est_paye ? '#22c55e' : '#fbbf24'">
+          {{ formatPrix(activeAbo()!.prix_paye) }} DT
+          <span *ngIf="activeAbo()!.est_paye" style="font-size:9px;color:#22c55e"> ✓ Payé</span>
+          <span *ngIf="!activeAbo()!.est_paye" style="font-size:9px;color:#fbbf24"> ⏳ En attente</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Remise si applicable -->
+    <div *ngIf="activeAbo()!.reduction && parseFloat(activeAbo()!.reduction!) > 0"
+         class="abo-remise-badge">
+      🏷️ Remise ouverture appliquée — {{ activeAbo()!.reduction }}%
+    </div>
+
+    <!-- Bouton renouveler -->
+    <button class="btn-renouveler" (click)="renouvelerAbo()">
+      🔄 Renouveler cet abonnement
+    </button>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     ONGLET 2 — HISTORIQUE ABONNEMENTS
+     GET /api/clients/{cin}/abonnements/
+════════════════════════════════════════════════════════════════ -->
+<div *ngIf="activeTab() === 'historique_abo'" class="tab-content">
+
+  <!-- Stats rapides -->
+  <div *ngIf="!isLoadingHistAbo() && historiqueAbonnements().length > 0" class="hist-stats">
+    <div class="hist-stat">
+      <div class="hist-stat-val">{{ totalAbosClient() }}</div>
+      <div class="hist-stat-label">Total</div>
+    </div>
+    <div class="hist-stat">
+      <div class="hist-stat-val" style="color:#22c55e">{{ abosActifs() }}</div>
+      <div class="hist-stat-label">Actifs</div>
+    </div>
+    <div class="hist-stat">
+      <div class="hist-stat-val" style="color:#9ba3c8">{{ abosTermines() }}</div>
+      <div class="hist-stat-label">Terminés</div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoadingHistAbo()" class="tab-loading">
+    <div class="tab-spinner"></div>
+    <span>Chargement historique...</span>
+  </div>
+
+  <!-- Vide -->
+  <div *ngIf="!isLoadingHistAbo() && historiqueAbonnements().length === 0" class="tab-empty">
+    <div class="tab-empty-icon">📋</div>
+    <div class="tab-empty-title">Aucun historique</div>
+    <div class="tab-empty-sub">Aucun abonnement passé trouvé</div>
+  </div>
+
+  <!-- Liste historique abonnements -->
+  <div class="hist-abo-list">
+    <div *ngFor="let abo of historiqueAbonnements(); let i = index"
+         class="hist-abo-item"
+         [class.hist-abo-item--actif]="abo.statut === 'actif'">
+
+      <div class="hist-abo-top">
+        <div class="hist-abo-left">
+          <div class="hist-abo-num">#{{ i + 1 }}</div>
+          <div>
+            <div class="hist-abo-type">{{ abo.type }}</div>
+            <div class="hist-abo-dates">
+              {{ formatDate(abo.date_debut) }}
+              <span style="color:#525c78">→</span>
+              {{ formatDate(abo.date_expiration) }}
+            </div>
+          </div>
+        </div>
+        <span class="abo-statut-chip" [ngClass]="getStatutAboClass(abo.statut)">
+          {{ getStatutAboLabel(abo.statut) }}
+        </span>
+      </div>
+
+      <div class="hist-abo-body">
+        <!-- Progression -->
+        <div class="hist-abo-progress">
+          <div class="hist-prog-bar">
+            <div class="hist-prog-fill"
+                 [style.width.%]="abo.seances_total > 0 ? ((abo.seances_utilisees ?? 0) / abo.seances_total * 100) : 0"
+                 [style.background]="getAboProgressColor(abo.seances_total > 0 ? ((abo.seances_utilisees ?? 0) / abo.seances_total * 100) : 0)">
+            </div>
+          </div>
+          <span class="hist-prog-txt">
+            {{ abo.seances_utilisees ?? 0 }}/{{ abo.seances_total }} séances
+          </span>
+        </div>
+
+        <!-- Détails paiement -->
+        <div class="hist-abo-meta">
+          <span class="hist-meta-item">{{ getModeLabel(abo.mode_paiement || '') }}</span>
+          <span *ngIf="abo.prix_paye" class="hist-meta-item hist-meta-prix">{{ abo.prix_paye }} DT</span>
+          <span *ngIf="abo.est_paye" class="hist-meta-paye">✓ Payé</span>
+          <span *ngIf="abo.reduction && parseFloat(abo.reduction) > 0"
+                class="hist-meta-remise">🏷️ -{{ abo.reduction }}%</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     ONGLET 3 — HISTORIQUE SÉANCES
+     GET /api/clients/{cin}/seances/
+════════════════════════════════════════════════════════════════ -->
+<div *ngIf="activeTab() === 'seances'" class="tab-content">
+
+  <!-- Stats séances -->
+  <div *ngIf="!isLoadingSeances() && historiqueSeances().length > 0" class="seances-stats">
+    <div class="seance-stat">
+      <div class="seance-stat-val">{{ totalSeancesClient() }}</div>
+      <div class="seance-stat-label">Total</div>
+    </div>
+    <div class="seance-stat">
+      <div class="seance-stat-val" style="color:#22c55e">{{ seancesPresent() }}</div>
+      <div class="seance-stat-label">Présences</div>
+    </div>
+    <div class="seance-stat">
+      <div class="seance-stat-val" style="color:#f87171">{{ seancesAbsent() }}</div>
+      <div class="seance-stat-label">Absences</div>
+    </div>
+    <div class="seance-stat">
+      <div class="seance-stat-val" style="color:#3b82f6">{{ tauxPresence() }}%</div>
+      <div class="seance-stat-label">Taux présence</div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoadingSeances()" class="tab-loading">
+    <div class="tab-spinner"></div>
+    <span>Chargement séances...</span>
+  </div>
+
+  <!-- Vide -->
+  <div *ngIf="!isLoadingSeances() && historiqueSeances().length === 0" class="tab-empty">
+    <div class="tab-empty-icon">📅</div>
+    <div class="tab-empty-title">Aucune séance</div>
+    <div class="tab-empty-sub">Ce client n'a pas encore effectué de séances</div>
+  </div>
+
+  <!-- Liste séances -->
+  <div class="seances-list">
+    <div *ngFor="let s of historiqueSeances()"
+         class="seance-item"
+         [class.seance-item--present]="s.statut === 'present'"
+         [class.seance-item--absent]="s.statut === 'absent'">
+
+      <div class="seance-dot"
+           [style.background]="s.statut === 'present' ? '#22c55e' : '#f87171'">
+      </div>
+
+      <div class="seance-info">
+        <div class="seance-date-time">
+          <span class="seance-date">{{ formatDate(s.date) }}</span>
+          <span class="seance-time">{{ s.heure_debut }}<ng-container *ngIf="s.heure_fin"> – {{ s.heure_fin }}</ng-container></span>
+        </div>
+        <div class="seance-chips">
+          <span class="seance-appareil"
+                [class.seance-appareil--motion]="s.type_appareil === 'i-motion'"
+                [class.seance-appareil--model]="s.type_appareil === 'i-model'">
+            {{ s.type_appareil === 'i-motion' ? '⚡' : '🔷' }} {{ s.type_appareil }}
+          </span>
+          <span *ngIf="s.taille_gilet" class="seance-taille">👕 {{ s.taille_gilet }}</span>
+        </div>
+      </div>
+
+      <span class="seance-statut" [ngClass]="getStatutSeanceClass(s.statut)">
+        {{ s.statut === 'present' ? '✅ Présent' : '❌ Absent' }}
+      </span>
+
+    </div>
+  </div>
+</div>
+
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
+  </div>
+</div>
+</div>
+
+<!-- ══ MODAL — Nouveau / Modifier Client ════════════════════════════ -->
+<div *ngIf="showModal()"
+     class="modal-backdrop"
+     (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">
+          {{ modalMode() === 'add' ? 'Nouveau Client' : 'Modifier le Client' }}
+        </div>
+        <div class="modal-sub">
+          {{ modalMode() === 'add'
+            ? 'Remplissez les informations du nouveau client'
+            : 'Modifiez les informations du client' }}
+        </div>
+      </div>
+      <button class="modal-close" (click)="closeModal()">✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+
+      <!-- PRENOM / NOM -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Prénom *</label>
+          <input class="form-input"
+                 placeholder="Ahmed..."
+                 [(ngModel)]="clientForm.prenom">
+
+          <div class="error" *ngIf="formErrors.prenom">
+            {{ formErrors.prenom }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nom *</label>
+          <input class="form-input"
+                 placeholder="Mansouri..."
+                 [(ngModel)]="clientForm.nom">
+
+          <div class="error" *ngIf="formErrors.nom">
+            {{ formErrors.nom }}
+          </div>
+        </div>
+      </div>
+
+      <!-- CIN / DATE -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">CIN *</label>
+          <input class="form-input form-input--mono"
+                 placeholder="12345678"
+                 [(ngModel)]="clientForm.cin">
+
+          <div class="error" *ngIf="formErrors.cin">
+            {{ formErrors.cin }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Date de naissance</label>
+          <input class="form-input"
+                 type="date"
+                 [(ngModel)]="clientForm.date_naissance">
+        </div>
+      </div>
+
+      <!-- TELEPHONE -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Téléphone *</label>
+          <input class="form-input form-input--mono"
+                 placeholder="55123456"
+                 [(ngModel)]="clientForm.telephone_1">
+
+          <div class="error" *ngIf="formErrors.telephone_1">
+            {{ formErrors.telephone_1 }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Téléphone 2</label>
+          <input class="form-input form-input--mono"
+          type="text"
+  maxlength="8"
+  pattern="\d{8}"
+                 [(ngModel)]="clientForm.telephone_2">
+        </div>
+      </div>
+
+      <!-- EMAIL -->
+      <div class="form-group form-group--full">
+        <label class="form-label">Email</label>
+        <input class="form-input"
+               type="email"
+               placeholder="email@exemple.com"
+               [(ngModel)]="clientForm.email">
+
+        <div class="error" *ngIf="formErrors.email">
+          {{ formErrors.email }}
+        </div>
+      </div>
+
+      <!-- PHOTO -->
+      <div class="form-group form-group--full">
+        <label class="form-label">Photo</label>
+        <input class="form-input"
+               type="file"
+               accept="image/*"
+               (change)="onFileSelected($event)">
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModal()">Annuler</button>
+      <button class="btn-save" (click)="saveClient()">
+        {{ modalMode() === 'add' ? '✓ Enregistrer' : '✓ Mettre à jour' }}
+      </button>
+    </div>
+
+  </div>
+</div>

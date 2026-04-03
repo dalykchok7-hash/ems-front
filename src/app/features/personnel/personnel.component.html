@@ -1,0 +1,262 @@
+<div class="personnel-page">
+
+  <!-- KPI Section -->
+  <div class="kpi-section">
+    <div class="kpi-card" (click)="setFilter('tous')">
+      <div class="kpi-value text-cyan">{{ staff().length }}</div>
+      <div class="kpi-label">Total Personnel</div>
+    </div>
+    <div class="kpi-card" (click)="setFilter('actifs')">
+      <div class="kpi-value text-green">{{ totalActifs() }}</div>
+      <div class="kpi-label">Actifs</div>
+    </div>
+    <div class="kpi-card" (click)="setFilter('inactifs')">
+      <div class="kpi-value text-red">{{ totalInactifs() }}</div>
+      <div class="kpi-label">Désactivés</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value text-purple">{{ totalRoles() }}</div>
+      <div class="kpi-label">Rôles configurés</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Rechercher nom, email ou CIN..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      >
+      <select class="filter-select" [ngModel]="activeFilter()" (ngModelChange)="setFilter($event)">
+        <option value="tous">Tous les membres</option>
+        <option value="actifs">✅ Actifs</option>
+        <option value="inactifs">🔒 Désactivés</option>
+        <option value="jour">☀️ Shift Jour</option>
+        <option value="soir">🌙 Shift Soir</option>
+      </select>
+    </div>
+    <button class="btn-primary" (click)="openAddModal()">+ Nouveau Compte</button>
+  </div>
+
+  <!-- Loading state -->
+  <div class="loading-state" *ngIf="isLoading()">
+    <span>Chargement...</span>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" *ngIf="!isLoading() && filteredStaff().length === 0">
+    <div class="empty-icon">👤</div>
+    <div class="empty-text">Aucun membre trouvé</div>
+  </div>
+
+  <!-- Cards Grid -->
+  <div class="cards-grid" *ngIf="!isLoading()">
+    <div
+      class="staff-card"
+      *ngFor="let member of filteredStaff()"
+      [ngClass]="{'inactive': !member.is_active}"
+    >
+      <div class="status-dot" [ngClass]="member.is_active ? 'active' : 'inactive'"></div>
+
+      <div class="card-header">
+        <div class="avatar" [style.backgroundColor]="member.avatar_color">
+          {{ getInitials(member) }}
+        </div>
+        <div class="staff-info">
+          <div class="staff-name">{{ member.prenom }} {{ member.nom }}</div>
+          <div class="staff-email">{{ member.email }}</div>
+          <div class="staff-phone">{{ member.telephone }}</div>
+        </div>
+      </div>
+
+      <div class="role-badge" [ngClass]="getRoleMeta(member.role).class">
+        {{ getRoleMeta(member.role).icon }} {{ getRoleMeta(member.role).label }}
+      </div>
+
+      <div class="shift-badge">
+        {{ getShiftLabel(member.shift) }}
+      </div>
+
+      <div class="staff-cin">
+        🪪 {{ member.cin }}
+      </div>
+
+      <div class="staff-date" *ngIf="member.date_embauche">
+        📅 {{ member.date_embauche | date:'dd/MM/yyyy' }}
+      </div>
+
+      <div class="card-actions">
+        <button title="Modifier" (click)="openEditModal(member.id)">✏️</button>
+        <button title="{{ member.is_active ? 'Désactiver' : 'Activer' }}" (click)="toggleActif(member.id)">
+          {{ member.is_active ? '🔒' : '🔓' }}
+        </button>
+        <button title="Supprimer" (click)="deleteStaff(member.id)">🗑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" *ngIf="showModal()" (click)="onBackdropClick($event)">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-title">
+          {{ modalMode() === 'add' ? '+ Créer un nouveau compte' : '✏️ Modifier le compte' }}
+        </div>
+        <button class="btn-close" (click)="closeModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Recap card in edit mode -->
+        <div class="recap-card" *ngIf="modalMode() === 'edit' && editTarget()">
+          <div class="avatar" [style.backgroundColor]="editTarget()!.avatar_color">
+            {{ getInitials(editTarget()!) }}
+          </div>
+          <div class="recap-info">
+            <div class="recap-name">{{ editTarget()!.prenom }} {{ editTarget()!.nom }}</div>
+            <div class="recap-role">
+              {{ getRoleMeta(editTarget()!.role).icon }} {{ getRoleMeta(editTarget()!.role).label }}
+            </div>
+            <div class="recap-status" [ngClass]="editTarget()!.is_active ? 'status-active' : 'status-inactive'">
+              {{ editTarget()!.is_active ? '● Actif' : '● Désactivé' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Prénom / Nom -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Prénom *</label>
+            <input type="text" class="form-input" [(ngModel)]="form.prenom" placeholder="ex: Karim">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nom *</label>
+            <input type="text" class="form-input" [(ngModel)]="form.nom" placeholder="ex: Aziz">
+          </div>
+        </div>
+
+        <!-- Username / CIN -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nom d'utilisateur *</label>
+            <input type="text" class="form-input" [(ngModel)]="form.username" placeholder="ex: karim.aziz">
+          </div>
+          <div class="form-group">
+            <label class="form-label">CIN *</label>
+            <input type="text" class="form-input" [(ngModel)]="form.cin" placeholder="8 chiffres" maxlength="8">
+          </div>
+        </div>
+
+        <!-- Email / Téléphone -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <input type="email" class="form-input code-font" [(ngModel)]="form.email" placeholder="nom@pulselab.tn">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone</label>
+            <input type="text" class="form-input code-font" [(ngModel)]="form.telephone" placeholder="+216 ...">
+          </div>
+        </div>
+
+        <!-- Date d'embauche -->
+        <div class="form-group">
+          <label class="form-label">Date d'embauche</label>
+          <input type="date" class="form-input" [(ngModel)]="form.date_embauche">
+        </div>
+
+        <!-- Shift -->
+        <div class="form-group">
+          <label class="form-label">Shift</label>
+          <div class="role-selector">
+            <div class="role-card" [class.active-admin]="form.shift === 'jour'" (click)="form.shift = 'jour'">
+              <div class="role-card-title">☀️ Jour</div>
+            </div>
+            <div class="role-card" [class.active-admin]="form.shift === 'soir'" (click)="form.shift = 'soir'">
+              <div class="role-card-title">🌙 Soir</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rôle -->
+        <div class="form-group">
+          <label class="form-label">Rôle assigné</label>
+          <div class="role-selector">
+            <div class="role-card" [ngClass]="{'active-admin': form.role === 'admin'}" (click)="selectRole('admin')">
+              <div class="role-card-title">👑 Admin</div>
+              <div class="role-card-desc">Accès total à toutes les fonctions du système.</div>
+            </div>
+            <div class="role-card" [ngClass]="{'active-reception': form.role === 'personnel'}" (click)="selectRole('personnel')">
+              <div class="role-card-title">📋 Personnel</div>
+              <div class="role-card-desc">Accès aux créneaux, clients, abonnements, ventes.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mot de passe (add only) -->
+        <div class="form-group" *ngIf="modalMode() === 'add'">
+          <div class="pwd-generator">
+            <label class="form-label">Mot de passe *</label>
+            <button
+              class="btn-generate"
+              (click)="generateAndFillPassword()"
+            >🎲 Générer</button>
+          </div>
+          <div class="form-row">
+            <input
+              type="password"
+              class="form-input code-font"
+              [(ngModel)]="form.password"
+              placeholder="Saisir..."
+            >
+            <input
+              type="password"
+              class="form-input code-font"
+              [(ngModel)]="form.password2"
+              placeholder="Confirmer..."
+            >
+          </div>
+        </div>
+
+        <!-- Reset mot de passe (edit only) -->
+        <div class="form-group" *ngIf="modalMode() === 'edit'">
+          <button class="btn-secondary" (click)="resetPassword(editId()!)">
+            🔑 Réinitialiser le mot de passe
+          </button>
+        </div>
+
+      </div><!-- /modal-body -->
+
+      <div class="modal-footer">
+        <button
+          class="btn-danger"
+          *ngIf="modalMode() === 'edit' && !isProtectedUser()"
+          (click)="deleteStaff(editTarget()!.id)"
+        >🗑 Supprimer</button>
+
+        <!-- Spacer si utilisateur protégé ou mode add -->
+        <div *ngIf="modalMode() === 'add' || isProtectedUser()"></div>
+
+        <div class="footer-actions">
+          <button class="btn-secondary" (click)="closeModal()">Annuler</button>
+          <button class="btn-save" (click)="saveStaff()" [disabled]="isLoading()">
+            {{ isLoading() ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /modal-box -->
+  </div><!-- /modal-backdrop -->
+
+  <!-- Toast -->
+  <div class="toast-container" *ngIf="toast().visible">
+    <div class="toast" [ngClass]="toast().type">
+      {{ toast().message }}
+    </div>
+  </div>
+
+</div>

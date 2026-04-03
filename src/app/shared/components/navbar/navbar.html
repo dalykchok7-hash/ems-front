@@ -1,0 +1,35 @@
+<header class="navbar">
+
+  <!-- Left: Page title -->
+  <div class="navbar-left">
+    <div class="navbar-title">{{ pageTitle }}</div>
+    <div class="navbar-breadcrumb">{{ breadcrumb }}</div>
+  </div>
+
+  <!-- Right: Actions -->
+  <div class="navbar-right">
+
+    <!-- Date chip -->
+    <div class="navbar-date-chip">
+      📅 {{ currentDate | date:'EEE d MMM yyyy' : '' : 'fr' }}
+    </div>
+
+    <!-- Déconnexion — ajout classe logout-btn -->
+    <div class="navbar-icon-btn logout-btn" title="Déconnexion" (click)="logout()">
+      <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
+        <path d="M210-74q-57.12 0-96.56-39.44Q74-152.88 74-210v-540q0-57.13 39.44-96.56Q152.88-886 210-886h278v136H210v540h278v136H210Zm414-143-96-96 99-99H350v-136h277l-99-99 96-96 262 263-262 263Z"/>
+      </svg>
+    </div>
+
+    <!-- Avatar -->
+    <div class="navbar-avatar-chip">
+      <div class="navbar-avatar">{{ getInitials() }}</div>
+      <div>
+        <div class="navbar-avatar-name">{{ user?.nom }}</div>
+        <div class="navbar-avatar-role">{{ user?.role }}</div>
+      </div>
+    </div>
+
+  </div>
+
+</header>

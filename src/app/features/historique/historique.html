@@ -1,0 +1,174 @@
+<div class="hist-page">
+
+  <!-- ── HEADER ── -->
+  <div class="hist-header">
+    <div class="hist-header-left">
+      <div class="hist-title">🕒 Historique</div>
+      <div class="hist-subtitle">Activités des 7 derniers jours</div>
+    </div>
+    <button class="refresh-btn" (click)="loadHistorique()" [disabled]="isLoading()">
+      <span [class.spinning]="isLoading()">🔄</span>
+      Actualiser
+    </button>
+  </div>
+
+  <!-- ── FILTER BAR ── -->
+  <div class="filter-bar">
+    <div class="filter-tabs">
+      <button *ngFor="let f of filters"
+              class="filter-tab"
+              [class.filter-tab--active]="activeFilter() === f.key"
+              (click)="setFilter(f.key)">
+        {{ f.icon }} {{ f.label }}
+      </button>
+    </div>
+    <!-- Sélecteur de date -->
+    <div class="date-selector">
+      <input
+        type="date"
+        class="date-input"
+        [value]="selectedDate()"
+        [max]="today"
+        (change)="onDateChange($event)"
+      />
+      <button
+        class="btn-reset-date"
+        *ngIf="selectedDate()"
+        (click)="resetDate()"
+        title="Revenir aux 7 derniers jours"
+      >✕ 7 jours</button>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input"
+             type="text"
+             placeholder="Rechercher client, personnel…"
+             (input)="onSearch($event)" />
+    </div>
+  </div>
+
+  <!-- ── STATS BAR ── -->
+  <div class="stats-bar">
+    <div class="stat-chip">
+      <span class="stat-num">{{ totalCount() }}</span>
+      <span class="stat-lbl">entrée(s)</span>
+    </div>
+    <div class="stat-chip">
+      <span class="stat-num">{{ currentPage() }}/{{ totalPages() }}</span>
+      <span class="stat-lbl">page</span>
+    </div>
+  </div>
+
+  <!-- ── LOADING ── -->
+  <div *ngIf="isLoading()" class="state-box">
+    <div class="big-spinner"></div>
+    <span>Chargement de l'historique…</span>
+  </div>
+
+  <!-- ── ERROR ── -->
+  <div *ngIf="!isLoading() && hasError()" class="state-box state-box--error">
+    <span class="state-icon">⚠️</span>
+    <span>Impossible de charger l'historique.</span>
+    <button class="retry-btn" (click)="loadHistorique()">Réessayer</button>
+  </div>
+
+  <!-- ── EMPTY ── -->
+  <div *ngIf="!isLoading() && !hasError() && filteredEntries().length === 0" class="state-box">
+    <span class="state-icon">📂</span>
+    <span>Aucune entrée trouvée.</span>
+  </div>
+
+  <!-- ── TABLE ── -->
+  <div *ngIf="!isLoading() && !hasError() && pagedEntries().length > 0" class="card">
+    <div class="table-scroll">
+      <table class="hist-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Personnel</th>
+            <th>Action</th>
+            <th>Client / Détails</th>
+            <th>Description</th>
+            <th>Date</th>
+            <th>Il y a</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of pagedEntries(); let i = index" class="hist-row">
+
+            <!-- Index -->
+            <td>
+              <span class="row-index">{{ (currentPage() - 1) * pageSize + i + 1 }}</span>
+            </td>
+
+            <!-- Personnel qui a effectué l'action -->
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar"
+                     [style.background]="getDotColor('connexion') + '22'"
+                     [style.color]="getDotColor('connexion')">
+                  {{ e.personnelNom.charAt(0).toUpperCase() }}
+                </div>
+                <span class="client-name">{{ e.personnelNom }}</span>
+              </div>
+            </td>
+
+            <!-- Badge action -->
+            <td>
+              <span class="type-badge" [ngClass]="e.badgeClass">
+                {{ e.actionLabel }}
+              </span>
+            </td>
+
+            <!-- Client concerné (depuis details) -->
+            <td>
+              <div class="client-cell" *ngIf="e.client !== '—'">
+                <div class="client-avatar"
+                     [style.background]="e.dotColor + '22'"
+                     [style.color]="e.dotColor">
+                  {{ e.client.charAt(0).toUpperCase() }}
+                </div>
+                <span class="client-name">{{ e.client }}</span>
+              </div>
+              <span *ngIf="e.client === '—'" class="desc-text">—</span>
+            </td>
+
+            <!-- Description -->
+            <td>
+              <span class="desc-text">{{ e.description }}</span>
+            </td>
+
+            <!-- Date -->
+            <td>
+              <span class="date-mono">{{ formatDate(e.createdAt) }}</span>
+            </td>
+
+            <!-- Relatif -->
+            <td>
+              <span class="rel-time">{{ formatRelative(e.createdAt) }}</span>
+            </td>
+
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── PAGINATION ── -->
+  <div *ngIf="totalPages() > 1" class="pagination">
+    <button class="page-btn"
+            (click)="goToPage(currentPage() - 1)"
+            [disabled]="currentPage() === 1">‹</button>
+    <button *ngFor="let p of pageNumbers()"
+            class="page-btn"
+            [class.page-btn--active]="p === currentPage()"
+            (click)="goToPage(p)">
+      {{ p }}
+    </button>
+    <button class="page-btn"
+            (click)="goToPage(currentPage() + 1)"
+            [disabled]="currentPage() === totalPages()">›</button>
+  </div>
+
+</div>

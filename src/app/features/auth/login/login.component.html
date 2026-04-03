@@ -1,0 +1,191 @@
+<div class="login-page"
+  style="background-image: url('images/bg-login.png');">
+
+  <!-- ── LEFT PANEL ───────────────────────────────────────────── -->
+  <div class="login-panel">
+
+    <!-- Logo -->
+    <div class="logo-wrap">
+      <img src="images/logo-gym.png" alt="Logo" class="logo-img">
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         VUE 1 — LOGIN
+    ══════════════════════════════════════════ -->
+    <form *ngIf="view() === 'login'" (ngSubmit)="login()" class="auth-form" autocomplete="on">
+
+      <div class="form-heading">
+        <h1 class="form-title">Connexion</h1>
+        <p class="form-sub">Bienvenue, entrez vos identifiants</p>
+      </div>
+
+      <!-- Username -->
+      <div class="field-group">
+        <label class="field-label">Identifiant</label>
+        <div class="field-wrap">
+          <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          <input type="text" name="username" [(ngModel)]="username"
+            placeholder="Nom d'utilisateur" autofocus class="field-input" />
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="field-group">
+        <label class="field-label">Mot de passe</label>
+        <div class="field-wrap">
+          <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <input type="password" name="password" [(ngModel)]="password"
+            placeholder="Mot de passe" class="field-input" />
+        </div>
+      </div>
+
+      <!-- Forgot link -->
+      <div class="forgot-link-wrap">
+        <button type="button" class="forgot-link" (click)="goTo('forgot')">
+          Mot de passe oublié ?
+        </button>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="erreur()" class="auth-error">⚠️ {{ erreur() }}</div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn-submit" [disabled]="loading()">
+        <span *ngIf="loading()" class="spinner"></span>
+        <span>{{ loading() ? 'Connexion...' : 'SE CONNECTER' }}</span>
+      </button>
+
+    </form>
+
+    <!-- ══════════════════════════════════════════
+         VUE 2 — MOT DE PASSE OUBLIÉ
+    ══════════════════════════════════════════ -->
+    <form *ngIf="view() === 'forgot'" (ngSubmit)="sendForgot()" class="auth-form">
+
+      <div class="form-heading">
+        <div class="back-btn-wrap">
+          <button type="button" class="back-btn" (click)="goTo('login')">← Retour</button>
+        </div>
+        <h1 class="form-title">Mot de passe oublié</h1>
+        <p class="form-sub">Entrez votre email pour recevoir un token de réinitialisation</p>
+      </div>
+
+      <!-- Email -->
+      <div class="field-group">
+        <label class="field-label">Adresse email</label>
+        <div class="field-wrap">
+          <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <input type="email" name="forgotEmail" [(ngModel)]="forgotEmail"
+            placeholder="votre@email.com" class="field-input" autofocus />
+        </div>
+      </div>
+
+      <!-- Error / Success -->
+      <div *ngIf="erreur()" class="auth-error">⚠️ {{ erreur() }}</div>
+      <div *ngIf="succes()" class="auth-success">✅ {{ succes() }}</div>
+
+      <button type="submit" class="btn-submit" [disabled]="loading()">
+        <span *ngIf="loading()" class="spinner"></span>
+        <span>{{ loading() ? 'Envoi...' : 'ENVOYER LE TOKEN' }}</span>
+      </button>
+
+      <div class="view-switch">
+        Déjà reçu un token ?
+        <button type="button" class="link-btn" (click)="goTo('reset')">Réinitialiser →</button>
+      </div>
+
+    </form>
+
+    <!-- ══════════════════════════════════════════
+         VUE 3 — RÉINITIALISER MOT DE PASSE
+    ══════════════════════════════════════════ -->
+    <form *ngIf="view() === 'reset'" (ngSubmit)="resetPassword()" class="auth-form">
+
+      <div class="form-heading">
+        <div class="back-btn-wrap">
+          <button type="button" class="back-btn" (click)="goTo('forgot')">← Retour</button>
+        </div>
+        <h1 class="form-title">Nouveau mot de passe</h1>
+        <p class="form-sub">Entrez le token reçu par email et votre nouveau mot de passe</p>
+      </div>
+
+      <!-- Token -->
+      <div class="field-group">
+        <label class="field-label">Token de vérification</label>
+        <div class="field-wrap">
+          <span class="field-icon-text">🔑</span>
+          <input type="text" name="resetToken" [(ngModel)]="resetToken"
+            placeholder="Collez votre token ici" class="field-input field-mono" autofocus />
+        </div>
+      </div>
+
+      <!-- Nouveau mot de passe -->
+      <div class="field-group">
+        <label class="field-label">Nouveau mot de passe</label>
+        <div class="field-wrap">
+          <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <input type="password" name="resetNew" [(ngModel)]="resetNew"
+            placeholder="Minimum 6 caractères" class="field-input" />
+        </div>
+
+        <!-- Barre de force -->
+        <div *ngIf="resetNew.length > 0" class="pwd-strength-row">
+          <div class="pwd-strength-track">
+            <div class="pwd-strength-bar"
+              [style.width.%]="pwdStrength * 33.3"
+              [style.background]="pwdStrengthColor">
+            </div>
+          </div>
+          <span class="pwd-strength-lbl" [style.color]="pwdStrengthColor">
+            {{ pwdStrengthLabel }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Confirmer -->
+      <div class="field-group">
+        <label class="field-label">Confirmer le mot de passe</label>
+        <div class="field-wrap">
+          <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <input type="password" name="resetConfirm" [(ngModel)]="resetConfirm"
+            placeholder="Répéter le mot de passe" class="field-input"
+            [class.field-input--match]="resetNew && resetConfirm && resetNew === resetConfirm"
+            [class.field-input--mismatch]="resetConfirm && resetNew !== resetConfirm" />
+        </div>
+      </div>
+
+      <!-- Error / Succes -->
+      <div *ngIf="erreur()" class="auth-error">⚠️ {{ erreur() }}</div>
+      <div *ngIf="succes()" class="auth-success">✅ {{ succes() }}</div>
+
+      <button type="submit" class="btn-submit btn-submit--green" [disabled]="loading()">
+        <span *ngIf="loading()" class="spinner"></span>
+        <span>{{ loading() ? 'Vérification...' : 'RÉINITIALISER' }}</span>
+      </button>
+
+      <div class="view-switch">
+        Vous souvenez du mot de passe ?
+        <button type="button" class="link-btn" (click)="goTo('login')">Se connecter →</button>
+      </div>
+
+    </form>
+
+  </div>
+  <!-- ── RIGHT PANEL (décoration) ─────────────────────────────── -->
+  <div class="login-right"></div>
+</div>

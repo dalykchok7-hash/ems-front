@@ -1,0 +1,299 @@
+<!-- ══ TOAST ══════════════════════════════════════════════════════ -->
+<div *ngIf="toast().visible"
+     class="toast"
+     [class.toast--success]="toast().type === 'success'"
+     [class.toast--warning]="toast().type === 'warning'"
+     [class.toast--info]="toast().type === 'info'">
+  <span>{{ toast().type === 'success' ? '✅' : toast().type === 'warning' ? '⚠️' : 'ℹ️' }}</span>
+  {{ toast().message }}
+</div>
+
+<!-- ══ PAGE ════════════════════════════════════════════════════════ -->
+<div class="produits-page">
+
+  <!-- Loading bar -->
+  <div *ngIf="isLoading()" class="loading-bar">
+    <div class="loading-fill"></div>
+  </div>
+
+  <!-- ── KPIs ── -->
+  <div class="kpi-grid">
+
+    <div class="kpi-card" (click)="setFilter('tous')">
+      <div class="kpi-glow" style="background:#3b82f6"></div>
+      <div class="kpi-top">
+        <div class="kpi-label">Total Produits</div>
+        <div class="kpi-icon" style="background:rgba(59,130,246,.1);color:#3b82f6;border:1px solid rgba(59,130,246,.18)">📦</div>
+      </div>
+      <div class="kpi-value" style="color:#3b82f6">{{ totalProduits() }}</div>
+      <div class="kpi-trend">{{ totalActifs() }} actifs</div>
+    </div>
+
+    <div class="kpi-card" (click)="setFilter('stock_faible')">
+      <div class="kpi-glow" style="background:#f87171"></div>
+      <div class="kpi-top">
+        <div class="kpi-label">Stock Faible</div>
+        <div class="kpi-icon" style="background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.18)">⚠️</div>
+      </div>
+      <div class="kpi-value" [style.color]="stockFaibleCount() > 0 ? '#f87171' : '#22c55e'">
+        {{ stockFaibleCount() }}
+      </div>
+      <div class="kpi-trend" [class.trend-down]="stockFaibleCount() > 0">
+        {{ stockFaibleCount() > 0 ? 'Réapprovisionnement requis' : 'Stock OK' }}
+      </div>
+    </div>
+
+    <div class="kpi-card" (click)="setFilter('actif')">
+      <div class="kpi-glow" style="background:#22c55e"></div>
+      <div class="kpi-top">
+        <div class="kpi-label">Produits Actifs</div>
+        <div class="kpi-icon" style="background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.18)">✅</div>
+      </div>
+      <div class="kpi-value" style="color:#22c55e">{{ totalActifs() }}</div>
+      <div class="kpi-trend">En vente</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-glow" style="background:#fbbf24"></div>
+      <div class="kpi-top">
+        <div class="kpi-label">Valeur Stock</div>
+        <div class="kpi-icon" style="background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.18)">💰</div>
+      </div>
+      <div class="kpi-value" style="color:#fbbf24;font-size:16px">
+        {{ valeurTotaleStock().toLocaleString('fr-FR', {maximumFractionDigits:0}) }}
+        <span class="kpi-unit">DT</span>
+      </div>
+      <div class="kpi-trend">Produits actifs</div>
+    </div>
+
+  </div>
+
+  <!-- ── Toolbar ── -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input"
+               placeholder="Rechercher un produit..."
+               [(ngModel)]="searchValue"/>
+      </div>
+      <div class="filter-group">
+        <button class="flt-btn" [class.flt-btn--active]="activeFilter() === 'tous'"        (click)="setFilter('tous')">Tous ({{ totalProduits() }})</button>
+        <button class="flt-btn" [class.flt-btn--active]="activeFilter() === 'actif'"       (click)="setFilter('actif')">✅ Actifs</button>
+        <button class="flt-btn" [class.flt-btn--active]="activeFilter() === 'stock_faible'" (click)="setFilter('stock_faible')">⚠️ Stock faible</button>
+        <button class="flt-btn" [class.flt-btn--active]="activeFilter() === 'inactif'"     (click)="setFilter('inactif')">⛔ Inactifs</button>
+      </div>
+    </div>
+    <button class="btn-add" (click)="openAddModal()">+ Nouveau Produit</button>
+  </div>
+
+  <!-- ── Grille produits ── -->
+  <div class="produits-grid" *ngIf="!isLoading()">
+
+    <div *ngFor="let p of filteredProduits()"
+         class="produit-card"
+         [class.produit-card--inactif]="!p.est_actif"
+         [class.produit-card--alerte]="p.stock_faible && p.est_actif">
+
+      <!-- Badge stock -->
+      <div class="stock-badge" [ngClass]="getStockClass(p)">
+        {{ getStockLabel(p) }}
+      </div>
+
+      <!-- Header -->
+      <div class="pc-header">
+        <div class="pc-type-icon" [style.background]="getTypeMeta(p.type).color + '18'"
+             [style.border]="'1px solid ' + getTypeMeta(p.type).color + '30'">
+          <span class="pc-icon-emoji">{{ getTypeMeta(p.type).icon }}</span>
+        </div>
+        <div class="pc-actif-toggle"
+             [title]="p.est_actif ? 'Désactiver' : 'Activer'"
+             (click)="toggleActif(p.id)">
+          <div class="toggle-pill" [class.toggle-pill--on]="p.est_actif">
+            <div class="toggle-thumb"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Infos produit -->
+      <div class="pc-nom">{{ p.nom }}</div>
+      <div class="pc-type-label" [style.color]="getTypeMeta(p.type).color">
+        {{ getTypeMeta(p.type).icon }} {{ p.type_label || getTypeMeta(p.type).label }}
+      </div>
+
+      <!-- Prix -->
+      <div class="pc-prix">
+        {{ formatPrix(p.prix_unitaire) }}
+        <span class="pc-prix-unit">/ unité</span>
+      </div>
+
+      <!-- Stock avec contrôles rapides -->
+      <div class="pc-stock-row">
+        <div class="pc-stock-info">
+          <span class="pc-stock-label">Stock</span>
+          <span class="pc-stock-val" [style.color]="getStockColor(p)">
+            {{ p.stock }}
+            <span class="pc-stock-seuil">/ min {{ p.seuil_alerte }}</span>
+          </span>
+        </div>
+
+        <!-- Barre de stock -->
+        <div class="pc-stock-bar">
+          <div class="pc-stock-fill"
+               [style.width.%]="Math.min((p.stock / (p.seuil_alerte * 5 || 10)) * 100, 100)"
+               [style.background]="getStockColor(p)">
+          </div>
+        </div>
+
+        <!-- Ajustement rapide stock -->
+        <div class="pc-stock-ctrl">
+          <button class="stock-btn stock-btn--minus"
+                  (click)="ajusterStock(p.id, -1)"
+                  [disabled]="p.stock === 0">−</button>
+          <span class="stock-num" [style.color]="getStockColor(p)">{{ p.stock }}</span>
+          <button class="stock-btn stock-btn--plus"
+                  (click)="ajusterStock(p.id, +1)">+</button>
+        </div>
+      </div>
+
+      <!-- Footer actions -->
+      <div class="pc-footer">
+        <button class="pc-btn pc-btn--edit" (click)="openEditModal(p.id)">
+          ✏️ Modifier
+        </button>
+        <button class="pc-btn"
+                [class.pc-btn--desactiver]="p.est_actif"
+                [class.pc-btn--activer]="!p.est_actif"
+                (click)="toggleActif(p.id)">
+          {{ p.est_actif ? '⛔ Désactiver' : '✅ Activer' }}
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="filteredProduits().length === 0 && !isLoading()" class="empty-state">
+      <div class="empty-icon">📦</div>
+      <div class="empty-title">Aucun produit trouvé</div>
+      <div class="empty-sub">Ajoutez votre premier produit avec le bouton ci-dessus</div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ══ MODAL ════════════════════════════════════════════════════════ -->
+<div *ngIf="showModal()" class="modal-backdrop" (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">
+          {{ modalMode() === 'add' ? '+ Nouveau Produit' : '✏️ Modifier le Produit' }}
+        </div>
+        <div class="modal-sub" *ngIf="modalMode() === 'edit' && editTarget()">
+          {{ editTarget()!.nom }}
+          <span [style.color]="getTypeMeta(editTarget()!.type).color">
+            · {{ editTarget()!.type_label }}
+          </span>
+        </div>
+      </div>
+      <button class="modal-close" (click)="closeModal()">✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+
+      <!-- Nom -->
+      <div class="form-group">
+        <label class="form-label">Nom du produit *</label>
+        <input class="form-input" type="text"
+               placeholder="Ex: Whey Protein Vanille"
+               [(ngModel)]="produitForm.nom">
+      </div>
+
+      <!-- Type -->
+      <div class="form-group">
+        <label class="form-label">Type *</label>
+        <div class="type-selector">
+          <div *ngFor="let t of TYPES"
+               class="type-card"
+               [class.type-card--selected]="produitForm.type === t.key"
+               [style.--type-color]="t.color"
+               (click)="produitForm.type = t.key">
+            <div *ngIf="produitForm.type === t.key" class="type-check">✓</div>
+            <div class="type-icon">{{ t.icon }}</div>
+            <div class="type-label" [style.color]="produitForm.type === t.key ? t.color : '#fff'">
+              {{ t.label }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prix + Stock -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Prix unitaire (DT) *</label>
+          <input class="form-input" type="number" min="0" step="0.01"
+                 placeholder="0.00"
+                 [(ngModel)]="produitForm.prix_unitaire">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stock initial</label>
+          <input class="form-input" type="number" min="0"
+                 placeholder="0"
+                 [(ngModel)]="produitForm.stock">
+        </div>
+      </div>
+
+      <!-- Seuil alerte -->
+      <div class="form-group">
+        <label class="form-label">
+          Seuil d'alerte stock
+          <span class="form-label-hint">— Alerte si stock ≤ cette valeur</span>
+        </label>
+        <input class="form-input" type="number" min="0"
+               placeholder="2"
+               [(ngModel)]="produitForm.seuil_alerte">
+      </div>
+
+      <!-- Récap -->
+      <div class="summary-box" *ngIf="produitForm.nom || produitForm.prix_unitaire">
+        <div class="summary-title">📋 Récapitulatif</div>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="summary-key">Produit</span>
+            <span class="summary-val">{{ produitForm.nom || '—' }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-key">Type</span>
+            <span class="summary-val" [style.color]="getTypeMeta(produitForm.type).color">
+              {{ getTypeMeta(produitForm.type).icon }} {{ getTypeMeta(produitForm.type).label }}
+            </span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-key">Prix</span>
+            <span class="summary-val" style="color:#fbbf24;font-weight:800">
+              {{ produitForm.prix_unitaire ? (produitForm.prix_unitaire + ' DT') : '—' }}
+            </span>
+          </div>
+          <div class="summary-item">
+            <span class="summary-key">Stock</span>
+            <span class="summary-val" style="color:#22c55e">{{ produitForm.stock }} unités</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeModal()">Annuler</button>
+      <button class="btn-save"
+              [class.btn-save--edit]="modalMode() === 'edit'"
+              (click)="saveProduit()">
+        {{ modalMode() === 'add' ? '✓ Créer le produit' : '✓ Enregistrer' }}
+      </button>
+    </div>
+  </div>
+</div>

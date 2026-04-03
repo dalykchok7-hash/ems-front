@@ -1,0 +1,174 @@
+
+
+:host { display: block; flex-shrink: 0; }
+
+/* ══ DESKTOP ══════════════════════════════════════════════════════ */
+.navbar {
+  height: 54px;
+  background: #111627;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  font-family: 'Outfit', sans-serif;
+  flex-shrink: 0;
+}
+
+.navbar-left       { display: flex; flex-direction: column; }
+.navbar-title      { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+.navbar-breadcrumb { font-size: 10px; color: #525c78; margin-top: 1px; }
+
+.navbar-right { display: flex; align-items: center; gap: 8px; }
+
+.navbar-date-chip {
+  display: flex; align-items: center; gap: 5px;
+  background: #17203a; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px; padding: 5px 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #9ba3c8;
+  white-space: nowrap;
+}
+
+.navbar-icon-btn {
+  width: 32px; height: 32px;
+  background: #17203a; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: #9ba3c8; cursor: pointer; font-size: 13px;
+  transition: all 0.15s; position: relative;
+}
+.navbar-icon-btn:hover {
+  background: #1c2640; color: #eef0fa;
+  border-color: rgba(255,255,255,0.13);
+}
+
+.navbar-notif-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 6px; height: 6px;
+  background: #f87171; border-radius: 50%;
+  border: 1.5px solid #111627;
+}
+
+/* Logout — style rouge, ciblé uniquement sur .logout-btn */
+.navbar-icon-btn.logout-btn {
+  background: rgba(239,68,68,0.08);
+  color: #ef4444;
+  border-color: rgba(239,68,68,0.2);
+}
+.navbar-icon-btn.logout-btn:hover {
+  background: rgba(239,68,68,0.18);
+  color: #f87171;
+  border-color: rgba(239,68,68,0.4);
+  box-shadow: 0 4px 12px rgba(239,68,68,0.2);
+}
+
+.navbar-avatar-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: #17203a; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 5px 10px 5px 5px;
+  cursor: pointer; transition: all 0.15s;
+}
+.navbar-avatar-chip:hover { background: #1c2640; border-color: rgba(255,255,255,0.13); }
+.navbar-avatar {
+  width: 26px; height: 26px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 10px; font-weight: 700; flex-shrink: 0;
+}
+.navbar-avatar-name { font-size: 11.5px; font-weight: 600; color: #eef0fa; }
+.navbar-avatar-role { font-size: 9px; color: #525c78; }
+
+.navbar-live-dot {
+  width: 6px; height: 6px; background: #22c55e;
+  border-radius: 50%; box-shadow: 0 0 6px #22c55e;
+  animation: livePulse 2s infinite;
+}
+@keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ══════════════════════════════════════════════════════
+   MOBILE ≤ 1024px — navbar en 2 lignes
+   Ligne 1 : actions (avatar + logout)
+   Ligne 2 : titre + date
+══════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+
+  .navbar {
+    height: auto;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+  }
+
+  /* ── Ligne 1 : actions ── */
+  .navbar-right {
+    order: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 8px 14px;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  /* Date chip dans la ligne 1 à gauche */
+  .navbar-date-chip {
+    display: flex !important;   /* forcer l'affichage */
+    margin-right: auto;         /* pousse vers la gauche */
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  /* ── Ligne 2 : titre page ── */
+  .navbar-left {
+    order: 2;
+    padding: 6px 14px 9px;
+    background: rgba(255,255,255,0.015);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .navbar-title      { font-size: 13px; font-weight: 700; }
+  .navbar-breadcrumb { display: block; font-size: 10px; }
+
+  /* Boutons */
+  .navbar-icon-btn {
+    width: 34px; height: 34px;
+    font-size: 13px; border-radius: 9px;
+  }
+  .navbar-icon-btn.logout-btn {
+    width: 34px; height: 34px;
+  }
+
+  /* Avatar avec nom visible */
+  .navbar-avatar      { width: 28px; height: 28px; font-size: 11px; }
+  .navbar-avatar-name {
+    display: block !important;
+    font-size: 12px; font-weight: 600;
+    white-space: nowrap;
+  }
+  .navbar-avatar-role { display: none; }
+  .navbar-avatar-chip { padding: 4px 8px 4px 4px; gap: 6px; }
+}
+
+/* ══════════════════════════════════════════════════════
+   TRÈS PETIT ≤ 480px
+══════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+
+  .navbar-right { padding: 6px 10px; gap: 6px; }
+  .navbar-left  { padding: 5px 10px 8px; }
+
+  .navbar-title { font-size: 12px; }
+
+  /* Date plus compacte */
+  .navbar-date-chip { font-size: 9px; padding: 3px 7px; }
+
+  .navbar-icon-btn        { width: 30px; height: 30px; font-size: 12px; }
+  .navbar-icon-btn.logout-btn { width: 30px; height: 30px; }
+
+  /* Nom tronqué si long */
+  .navbar-avatar-name {
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
