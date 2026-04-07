@@ -182,20 +182,7 @@
           </div>
         </div>
 
-        <!-- Rôle -->
-        <div class="form-group">
-          <label class="form-label">Rôle assigné</label>
-          <div class="role-selector">
-            <div class="role-card" [ngClass]="{'active-admin': form.role === 'admin'}" (click)="selectRole('admin')">
-              <div class="role-card-title">👑 Admin</div>
-              <div class="role-card-desc">Accès total à toutes les fonctions du système.</div>
-            </div>
-            <div class="role-card" [ngClass]="{'active-reception': form.role === 'personnel'}" (click)="selectRole('personnel')">
-              <div class="role-card-title">📋 Personnel</div>
-              <div class="role-card-desc">Accès aux créneaux, clients, abonnements, ventes.</div>
-            </div>
-          </div>
-        </div>
+        
 
         <!-- Mot de passe (add only) -->
         <div class="form-group" *ngIf="modalMode() === 'add'">

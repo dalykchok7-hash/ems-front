@@ -15,19 +15,8 @@
   <div *ngIf="isLoading()" class="loading-bar">
     <div class="loading-fill"></div>
   </div>
-
-  <!-- ── TOP BAR ─────────────────────────────────────────────── -->
-  <div class="dash-topbar">
-    <div class="dash-date">{{ formattedDate() }}</div>
-    <button class="btn-change-pwd" (click)="openPasswordModal()">
-      🔐 Changer mot de passe
-    </button>
-  </div>
-
-  <!-- ══════════════════════════════════════════════════════════════
-       BLOC 1 — REVENUE
-       Layout: [Jour | Mois | Annuel] + [Overview chart | Donut par type]
-  ══════════════════════════════════════════════════════════════════ -->
+ 
+  
   <div class="section-label">📊 Revenue</div>
 
   <!-- Revenue cards row: Jour / Mois / Annuel -->

@@ -172,6 +172,17 @@ export class ProduitsComponent implements OnInit {
 
   closeModal(): void { this.showModal.set(false); }
 
+  private handleBackendErrors(err: any, fallback: string): void {
+    console.error('ERREUR BACKEND:', err)
+    let msg = fallback
+    if (err.error && typeof err.error === 'object') {
+      const firstKey = Object.keys(err.error)[0]
+      const firstVal = err.error[firstKey]
+      msg = Array.isArray(firstVal) ? firstVal[0] : (err.error.error || JSON.stringify(err.error))
+    }
+    this.showToast(`❌ ${msg}`, 'warning')
+  }
+
   // ══════════════════════════════════════════════════════════════════
   // SAVE — POST /api/produits/ ou PUT /api/produits/{id}/
   // ══════════════════════════════════════════════════════════════════
@@ -198,10 +209,7 @@ export class ProduitsComponent implements OnInit {
           this.showToast(`✅ ${res.nom} ajouté au stock`, 'success');
           this.closeModal();
         },
-        error: (err: any) => {
-          const msg = err.error ? JSON.stringify(err.error) : 'Erreur serveur';
-          this.showToast(`❌ ${msg}`, 'warning');
-        }
+        error: (err: any) => this.handleBackendErrors(err, 'Erreur lors de la création')
       });
     } else {
       const id = this.editId();
@@ -216,10 +224,7 @@ export class ProduitsComponent implements OnInit {
           this.showToast(`✅ ${res.nom} modifié`, 'success');
           this.closeModal();
         },
-        error: (err: any) => {
-          const msg = err.error?.error || JSON.stringify(err.error) || 'Erreur serveur';
-          this.showToast(`❌ ${msg}`, 'warning');
-        }
+        error: (err: any) => this.handleBackendErrors(err, 'Erreur lors de la modification')
       });
     }
   }

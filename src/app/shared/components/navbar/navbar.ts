@@ -26,6 +26,7 @@ export class NavbarComponent implements OnInit {
     '/ventes':       { title: 'Ventes & Paiements',      bread: 'Accueil / Ventes'                },
     '/rapports':     { title: 'Rapports & Statistiques', bread: 'Accueil / Rapports'              },
     '/parametres':   { title: 'Paramètres',              bread: 'Accueil / Paramètres'            },
+    '/profile':      { title: 'Mon Profil',             bread: 'Accueil / Profil'                },
   };
 
   constructor(private router: Router,private api: ApiService) {}

@@ -230,6 +230,42 @@ export class PersonnelComponent implements OnInit {
     this.showToast('Réinitialisation du mot de passe non encore implémentée', 'info')
   }
 
+  // ── Gestion erreurs backend centralisée ──
+  private handleBackendErrors(err: any, defaultMsg: string): void {
+  console.log('ERREUR BACKEND:', JSON.stringify(err.error))
+
+  // ── Email ──
+  if (err?.error?.email) {
+    this.showToast(err.error.email[0], 'warning')
+    return
+  }
+
+  // ── CIN ──
+  if (err?.error?.cin) {
+    this.showToast(err.error.cin[0], 'warning')
+    return
+  }
+
+  // ── Username ──
+  if (err?.error?.username) {
+    this.showToast(err.error.username[0], 'warning')
+    return
+  }
+
+  // ── Password ──
+  if (err?.error?.password) {
+    this.showToast(err.error.password[0], 'warning')
+    return
+  }
+
+  // ── Erreur générique ──
+  const msg = err?.error?.detail
+    || err?.error?.non_field_errors?.[0]
+    || err?.error?.error
+    || defaultMsg
+  this.showToast(msg, 'warning')
+}
+
   saveStaff(): void {
     // ── Validation commune add + edit ──
     if (!this.form.prenom.trim() || !this.form.nom.trim()) {
@@ -282,13 +318,12 @@ export class PersonnelComponent implements OnInit {
         },
         error: (err: any) => {
           this.isLoading.set(false)
-          const msg = err?.error?.detail || err?.error?.non_field_errors?.[0] || 'Erreur lors de la création du compte'
-          this.showToast(msg, 'warning')
+          this.handleBackendErrors(err, 'Erreur lors de la création du compte')
         }
       })
 
     } else {
-      // ── Mode édition — aucune validation bloquante sur email/cin ──
+      // ── Mode édition ──
       const id = this.editId()
       if (!id) return
 
@@ -302,8 +337,7 @@ export class PersonnelComponent implements OnInit {
         shift        : this.form.shift,
         date_embauche: this.form.date_embauche,
       }
-      console.log('=== PAYLOAD ENVOYÉ ===', payload)      // ← ajouter
-      console.log('=== EMAIL VALUE ===', this.form.email) // ← ajouter
+
       this.isLoading.set(true)
       this.apiService.modifierPersonnel(id, payload).subscribe({
         next: () => {
@@ -312,10 +346,8 @@ export class PersonnelComponent implements OnInit {
           this.closeModal()
         },
         error: (err: any) => {
-          console.log('=== ERREUR BACKEND ===', err) // ← ajouter
           this.isLoading.set(false)
-          const msg = err?.error?.detail || err?.error?.non_field_errors?.[0] || 'Erreur lors de la modification'
-          this.showToast(msg, 'warning')
+          this.handleBackendErrors(err, 'Erreur lors de la modification')
         }
       })
     }

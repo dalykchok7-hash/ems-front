@@ -258,4 +258,13 @@ getDashboardClients(): Observable<any> {
     return this.http.delete(`${this.baseUrl}/clients/packs/${packId}/`)
   }
 
+  // ── PROFILE ───────────────────────────────────────────────────
+  getProfile(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/users/me/`)
+  }
+
+  updateAdminEmail(email: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/users/update-email/`, { email })
+  }
+
 }

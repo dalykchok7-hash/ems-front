@@ -1,0 +1,132 @@
+<div class="profile-page">
+  
+  <div *ngIf="loading()" class="full-loading">
+    <div class="spinner-neon"></div>
+    <p>Synchronisation du profil...</p>
+  </div>
+
+  <div *ngIf="!loading() && userProfile()" class="profile-content fade-in">
+
+    <!-- Header stylé -->
+    <div class="profile-hero">
+      <div class="hero-left">
+        <div class="avatar-neon">
+          {{ userProfile()?.nom?.substring(0, 2).toUpperCase() }}
+        </div>
+        <div class="hero-text">
+          <h1>{{ userProfile()?.nom }}</h1>
+          <p>Compte administrateur Pulse Lab</p>
+          <div class="hero-badges">
+            <span class="badge-blue">{{ userProfile()?.role }}</span>
+            <span class="badge-outline">ID: {{ userProfile()?.username }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="stat-box">
+          <span class="stat-label">Statut</span>
+          <span class="stat-value text-green">Actif</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alertes -->
+    <div class="alerts-container">
+      <div *ngIf="error()" class="alert alert-neon-red">
+        <span class="alert-icon">⚠️</span>
+        <span class="alert-msg">{{ error() }}</span>
+        <button class="alert-close" (click)="clearMessages()">×</button>
+      </div>
+
+      <div *ngIf="success()" class="alert alert-neon-green">
+        <span class="alert-icon">✨</span>
+        <span class="alert-msg">{{ success() }}</span>
+        <button class="alert-close" (click)="clearMessages()">×</button>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+
+      <!-- Carte Email -->
+      <section class="glass-card">
+        <div class="card-header">
+          <div class="header-icon icon-blue">📧</div>
+          <div class="header-title">
+            <h3>Configuration de l'email</h3>
+            <p>Gérez votre adresse de contact principale</p>
+          </div>
+        </div>
+        
+        <form [formGroup]="emailForm" (ngSubmit)="updateEmail()" class="neon-form">
+          <div class="field-group">
+            <label>Adresse email actuelle</label>
+            <div class="input-wrapper">
+              <input type="email" formControlName="email" 
+                     [class.input-error]="emailForm.get('email')?.invalid && emailForm.get('email')?.touched"
+                     placeholder="admin@pulselab.com">
+              <div class="input-glow"></div>
+            </div>
+          </div>
+          <button type="submit" class="btn-neon" [disabled]="emailForm.invalid">
+            Mettre à jour l'email
+          </button>
+        </form>
+      </section>
+
+      <!-- Carte Mot de passe -->
+      <section class="glass-card card-wide">
+        <div class="card-header">
+          <div class="header-icon icon-purple">🔐</div>
+          <div class="header-title">
+            <h3>Sécurité & Confidentialité</h3>
+            <p>Renforcez la protection de votre compte</p>
+          </div>
+        </div>
+        
+        <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="neon-form">
+          <div class="password-grid">
+            <div class="field-group group-full">
+              <label>Mot de passe actuel</label>
+              <div class="input-wrapper">
+                <input type="password" formControlName="old_password" placeholder="••••••••">
+                <div class="input-glow"></div>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label>Nouveau mot de passe</label>
+              <div class="input-wrapper">
+                <input type="password" formControlName="new_password" placeholder="Min. 6 caractères">
+                <div class="input-glow"></div>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label>Confirmer le mot de passe</label>
+              <div class="input-wrapper">
+                <input type="password" formControlName="confirm_password" placeholder="Répétez le mot de passe">
+                <div class="input-glow"></div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-neon btn-purple" [disabled]="passwordForm.invalid">
+            Mettre à jour la sécurité
+          </button>
+        </form>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Error fallback -->
+  <div *ngIf="!loading() && !userProfile() && error()" class="error-fallback">
+    <div class="error-box">
+      <span class="large-icon">🚩</span>
+      <h2>Erreur de connexion</h2>
+      <p>{{ error() }}</p>
+      <button class="btn-neon" (click)="fetchProfile()">Réessayer</button>
+    </div>
+  </div>
+
+</div>

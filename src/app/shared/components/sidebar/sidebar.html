@@ -88,6 +88,15 @@
   Personnel
 </a>
 
+<a *ngIf="isAdmin()"
+   routerLink="/profile"
+   routerLinkActive="sidebar-nav-item--active"
+   class="sidebar-nav-item"
+   (click)="closeMenu()">
+  <span class="sidebar-nav-icon">⚙️</span>
+  Mon Profil
+</a>
+
     <a routerLink="/historique"
        routerLinkActive="sidebar-nav-item--active"
        class="sidebar-nav-item"

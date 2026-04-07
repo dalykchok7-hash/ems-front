@@ -591,6 +591,25 @@ export class AbonnementsComponent implements OnInit {
   }
 
   // ── Save Abonnement ────────────────────────────────────────────
+  private handleBackendErrors(err: any, fallback: string): void {
+    console.error('ERREUR BACKEND:', err)
+    if (err.error && typeof err.error === 'object') {
+      const errorMsg = this.extractErrorMessage(err)
+      this.formError.set(errorMsg)
+      this.showToast(errorMsg, 'warning')
+    } else {
+      this.showToast(fallback, 'warning')
+    }
+  }
+
+  onEstPayeChange(val: boolean): void {
+    if (val && !this.aboForm.date_paiement) {
+      this.aboForm.date_paiement = new Date().toISOString().split('T')[0]
+    } else if (!val) {
+      this.aboForm.date_paiement = ''
+    }
+  }
+
   saveAbonnement(): void {
     if (this.modalMode() === 'add') {
       this.creerAbonnement()
@@ -629,7 +648,7 @@ export class AbonnementsComponent implements OnInit {
         this.showToast(`✅ Abonnement ${packLabel} créé`, 'success')
         this.closeModal()
       },
-      error: (err) => this.formError.set(this.extractErrorMessage(err))
+      error: (err) => this.handleBackendErrors(err, 'Erreur lors de la création')
     })
   }
 
@@ -653,7 +672,7 @@ export class AbonnementsComponent implements OnInit {
         this.showToast('✅ Abonnement modifié avec succès', 'success')
         this.closeModal()
       },
-      error: (err) => this.formError.set(this.extractErrorMessage(err))
+      error: (err) => this.handleBackendErrors(err, 'Erreur lors de la modification')
     })
   }
 

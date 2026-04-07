@@ -27,7 +27,7 @@
 
 /* ══ TOAST ════════════════════════════════════════════════════════ */
 .toast {
-  position: fixed; top: 16px; right: 16px; z-index: 9999;
+  position: fixed; top: 16px; right: 16px; z-index: 11000;
   display: flex; align-items: center; gap: 8px;
   padding: 10px 16px; border-radius: 10px;
   background: var(--bg2); border: 1px solid rgba(255,255,255,0.08);

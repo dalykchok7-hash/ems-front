@@ -6,7 +6,8 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
-
+import { AuthService } from '../../core/services/auth.service';
+import { PersonnelDashboardComponent } from './personnel-dashboard/personnel-dashboard.component';
 
 // ── Models ──────────────────────────────────────────────────────
 
@@ -67,7 +68,7 @@ export interface ToastState {
   type:    'success' | 'warning' | 'info';
 }
 
-// ── Component ─────────────────────────────────────────────────────
+// ── Admin Component ───────────────────────────────────────────────
 
 @Component({
   selector:    'app-admin-dashboard',
@@ -136,7 +137,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     })
   );
 
-  // true si au moins un bloc charge encore
   isLoading = computed(() =>
     this.isLoadingRevenus() || this.isLoadingAlertes() || this.isLoadingClients()
   );
@@ -193,7 +193,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   // ══════════════════════════════════════════════════════════════════
-  // BLOC 1 — GET /api/users/dashboard/revenus/?periode=...
+  // BLOC 1 — REVENUS
   // ══════════════════════════════════════════════════════════════════
 
   loadRevenus(mode: 'week' | 'month' | 'year'): void {
@@ -203,8 +203,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     this.apiService.getDashboardRevenus(periode).subscribe({
       next: (data: any) => {
         this.isLoadingRevenus.set(false);
-
-        // ── Revenue blocs ──────────────────────────────────────────
         const jour  = data.revenu_jour  || { abonnements: 0, ventes: 0, total: 0 };
         const mois  = data.revenu_mois  || { abonnements: 0, ventes: 0, total: 0 };
         const annee = data.revenu_annee || { abonnements: 0, ventes: 0, total: 0 };
@@ -236,15 +234,12 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
           },
         ]);
 
-        // ── Courbe (chart ligne) ───────────────────────────────────
         const courbe: any[] = data.revenus_courbe || [];
         this.CHART_DATA[mode] = courbe.length
           ? { labels: courbe.map(r => r.label), data: courbe.map(r => r.total) }
           : { labels: [], data: [] };
         if (this.chartsReady) this.buildRevenueChart(mode);
 
-        // ── Revenue par type → donut ───────────────────────────────
-        console.log("📊 Données brutes Dashboard Revenus:", data);
         const parTypeSource = data.revenus_par_type || data.revenu_par_type || data.abonnements_par_type || [];
         let mapped: any[] = [];
         if (Array.isArray(parTypeSource) && parTypeSource.length > 0) {
@@ -271,17 +266,14 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   // ══════════════════════════════════════════════════════════════════
-  // BLOC 2 — GET /api/users/dashboard/alertes/
+  // BLOC 2 — ALERTES
   // ══════════════════════════════════════════════════════════════════
 
   loadAlertes(): void {
     this.isLoadingAlertes.set(true);
-
     this.apiService.getDashboardAlertes().subscribe({
       next: (data: any) => {
         this.isLoadingAlertes.set(false);
-
-        // ── Expirations abonnements ────────────────────────────────
         this.expiringAbos.set(
           (data.expirations_proches || []).map((e: any) => ({
             initials:          this.getInitials(e.client_nom || '—'),
@@ -292,8 +284,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
             bar_percent:       Math.min(((e.seances_restantes || 0) / 10) * 100, 100),
           }))
         );
-
-        // ── Stock faible ───────────────────────────────────────────
         this.produitsAlerte.set(
           (data.stock_faible || []).map((p: any) => ({
             nom:          p.nom,
@@ -311,17 +301,14 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   // ══════════════════════════════════════════════════════════════════
-  // BLOC 3 — GET /api/users/dashboard/clients/
+  // BLOC 3 — CLIENTS
   // ══════════════════════════════════════════════════════════════════
 
   loadClients(): void {
     this.isLoadingClients.set(true);
-
     this.apiService.getDashboardClients().subscribe({
       next: (data: any) => {
         this.isLoadingClients.set(false);
-
-        // ── Stats clients ──────────────────────────────────────────
         this.clientStats.set({
           total:         data.total_clients    || 0,
           actifs:        data.clients_actifs   || 0,
@@ -329,8 +316,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
           nouveaux_mois: data.nouveaux_mois    || 0,
         });
 
-        // ── Abonnements par type → donut (fallback si /revenus/ pas encore chargé) ──
-        console.log("👥 Données brutes Dashboard Clients:", data);
         if (this.abonnementsParType().length === 0) {
           const parTypeSource = data.abonnements_par_type || data.revenus_par_type || data.revenu_par_type || [];
           let mapped: any[] = [];
@@ -358,7 +343,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     });
   }
 
-  // ── Chart mode switch ────────────────────────────────────────────
   setChartMode(mode: 'week' | 'month' | 'year'): void {
     if (this.activeChartMode() === mode) return;
     this.activeChartMode.set(mode);
@@ -367,7 +351,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     this.loadRevenus(mode);
   }
 
-  // ── Charts ──────────────────────────────────────────────────────
   private buildRevenueChart(mode: 'week' | 'month' | 'year'): void {
     const Chart = (window as any)['Chart'];
     if (!Chart || !this.revenueCanvasRef) return;
@@ -439,7 +422,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     });
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────
   getDonutColor(i: number): string { return this.DONUT_COLORS[i % this.DONUT_COLORS.length]; }
 
   getBlocAboPercent(bloc: RevenueBlock): number {
@@ -463,7 +445,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     return n.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
   }
 
-  // ── Séances helpers ──────────────────────────────────────────────
   naviguerVersCreneaux(seance?: SeanceRow): void { this.router.navigate(['/creneaux']); }
   ajouterReservation(seance: SeanceRow): void {
     this.showToast(`Réservation ajoutée à ${seance.heure_debut}`, 'success');
@@ -485,45 +466,29 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     if (s.reservations === 0) return 'sp-empty';
     return this.getOccupancyPercent(s) >= 60 ? 'sp-mid' : 'sp-ok';
   }
+
   loadSeancesJour(): void {
-  const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
+    this.apiService.getSeances(today).subscribe({
+      next: (res: any) => {
+        const data = res.results || res;
+        this.seancesJour = data.map((s: any) => ({
+          id: s.id,
+          heure_debut: s.heure_debut?.substring(0, 5) || '',
+          heure_fin: s.heure_fin?.substring(0, 5) || '',
+          reservations: s.reservations ?? s.reservations_count ?? 0,
+          places_total: s.places_total ?? s.places ?? 0,
+          disponibles: s.places_disponibles ?? s.disponibles ?? 0,
+          i_motion: s.i_motion ?? 0,
+          i_model: s.i_model ?? 0,
+        }));
+      },
+      error: (err) => {
+        this.showToast(`Erreur séances (${err.status})`, 'warning');
+      }
+    });
+  }
 
-  this.apiService.getSeances(today).subscribe({
-    next: (res: any) => {
-      console.log("RAW:", res);
-      const data = res.results || res;
-
-     this.seancesJour = data.map((s: any) => ({
-  id: s.id,
-
-  heure_debut: s.heure_debut?.substring(0, 5) || '',
-  heure_fin: s.heure_fin?.substring(0, 5) || '',
-
-  reservations: s.reservations 
-             ?? s.reservations_count 
-             ?? 0,
-
-  places_total: s.places_total 
-             ?? s.places 
-             ?? 0,
-
-  disponibles: s.places_disponibles 
-            ?? s.disponibles 
-            ?? 0,
-
-  i_motion: s.i_motion ?? 0,
-  i_model: s.i_model ?? 0,
-}));
-
-      console.log("SEANCES MAPPED:", this.seancesJour); // debug
-    },
-    error: (err) => {
-      this.showToast(`Erreur séances (${err.status})`, 'warning');
-    }
-  });
-}
-
-  // ── Toast ────────────────────────────────────────────────────────
   showToast(message: string, type: 'success' | 'warning' | 'info' = 'success'): void {
     clearTimeout(this.toastTimer);
     this.toast.set({ visible: true, message, type });
@@ -538,7 +503,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   naviguerVersProduits():    void { this.router.navigate(['/produits']); }
   naviguerVersClients():     void { this.router.navigate(['/clients']); }
 
-  // ── Change Password ───────────────────────────────────────────
   openPasswordModal(): void {
     this.passwordForm = { old_password: '', new_password: '', confirm_password: '' };
     this.passwordError.set(null);
@@ -552,7 +516,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   savePassword(): void {
     const f = this.passwordForm;
     this.passwordError.set(null);
-
     if (!f.old_password || !f.new_password || !f.confirm_password) {
       this.passwordError.set('Veuillez remplir tous les champs.');
       return;
@@ -565,7 +528,6 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
       this.passwordError.set('Les mots de passe ne correspondent pas.');
       return;
     }
-
     this.passwordLoading.set(true);
     this.apiService.changePassword({
       old_password: f.old_password,
@@ -576,15 +538,28 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         this.closePasswordModal();
         this.showToast('✅ Mot de passe modifié avec succès', 'success');
       },
-      error: (err) => {
+      error: (err: any) => {
         this.passwordLoading.set(false);
-        const msg = err.error?.error
-          || err.error?.old_password?.[0]
-          || err.error?.new_password?.[0]
-          || err.error?.detail
-          || 'Erreur lors du changement de mot de passe';
+        const msg = err.error?.error || 'Erreur lors du changement de mot de passe';
         this.passwordError.set(msg);
       }
     });
+  }
+}
+
+// ── Wrapper Dashboard ─────────────────────────────────────────────
+@Component({
+  selector:    'app-dashboard',
+  standalone:  true,
+  imports:     [CommonModule, AdminDashboardComponent, PersonnelDashboardComponent],
+  templateUrl: './dashboard.html',
+})
+export class DashboardComponent implements OnInit {
+  private auth = inject(AuthService);
+  userRole: 'admin' | 'personnel' | null = null;
+
+  ngOnInit(): void {
+    const user = this.auth.getUser();
+    this.userRole = user?.role || null;
   }
 }

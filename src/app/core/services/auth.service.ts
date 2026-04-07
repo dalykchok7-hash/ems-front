@@ -8,6 +8,7 @@ export interface AuthUser {
   id    : string
   role  : 'admin' | 'personnel'
   username: string
+  email?  : string
 }
 
 @Injectable({ providedIn: 'root' })

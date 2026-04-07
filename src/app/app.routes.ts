@@ -31,7 +31,7 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () =>
           import('./features/dashboard/dashboard')
-            .then(m => m.AdminDashboardComponent)
+            .then(m => m.DashboardComponent)
       },
       {
         path: 'clients',
@@ -84,6 +84,13 @@ export const routes: Routes = [
         import('./features/produits/produits')
         .then(m => m.ProduitsComponent)
      }, 
+     {
+        path: 'profile',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/profile/profile')
+            .then(m => m.ProfileComponent)
+      },
 
     ]
   },
