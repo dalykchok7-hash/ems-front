@@ -34,17 +34,23 @@
           },
           "configurations": {
             "production": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
               "budgets": [
                 {
-    "type": "initial",
-    "maximumWarning": "1mb",
-    "maximumError": "2mb"
-  },
-  {
-    "type": "anyComponentStyle",
-    "maximumWarning": "50kb",
-    "maximumError": "100kb"
-  }
+                  "type": "initial",
+                  "maximumWarning": "1mb",
+                  "maximumError": "2mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "50kb",
+                  "maximumError": "100kb"
+                }
               ],
               "outputHashing": "all"
             },
