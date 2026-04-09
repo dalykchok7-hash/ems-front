@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://ems-service-ndb1.onrender.com/api'
+  apiUrl: 'https://ems-fqrm.onrender.com/api'
 };
