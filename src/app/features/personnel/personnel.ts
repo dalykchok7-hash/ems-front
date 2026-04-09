@@ -332,6 +332,7 @@ export class PersonnelComponent implements OnInit {
         last_name    : this.form.nom.trim(),
         email        : this.form.email.trim(),
         cin          : this.form.cin.trim(),
+        username     : this.form.username.trim(),
         telephone    : this.form.telephone.trim(),
         role         : this.form.role,
         shift        : this.form.shift,
