@@ -20,7 +20,6 @@ export interface Seance {
 export interface Reservation {
   id: number | string;
   client_nom: string;
-  client_cin: string;
   client_telephone: string;
   type_appareil: TypeAppareil;
   statut: 'present' | 'absent' | 'en_attente' | 'annule';
@@ -317,7 +316,6 @@ tauxRemplissage = computed(() => {
 
           id: r.id,
           client_nom: r.client_nom || '',
-          client_cin: r.client_cin || '',
           client_telephone: r.client_telephone || '',
           type_appareil: r.type_appareil,
           statut: r.statut,
@@ -590,7 +588,6 @@ tauxRemplissage = computed(() => {
       const newReservation: Reservation = {
         id: data.id,
         client_nom: `${client.nom} ${client.prenom}`,
-        client_cin: client.cin,
         client_telephone: client.telephone_1,
         type_appareil: device,
         statut: 'en_attente',
