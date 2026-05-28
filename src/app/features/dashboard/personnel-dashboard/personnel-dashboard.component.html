@@ -10,12 +10,10 @@
 
 <div class="dash-page">
 
-  <!-- Loading bar -->
   <div *ngIf="isLoading()" class="loading-bar">
     <div class="loading-fill"></div>
   </div>
 
-  <!-- ── Bannière rôle ── -->
   <div class="role-banner">
     <div class="role-banner-left">
       <div class="role-icon">👤</div>
@@ -27,17 +25,12 @@
     <div class="role-badge">Mode consultation</div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════
-       BLOC 1 — REVENUE DU JOUR
-  ══════════════════════════════════════════════════════════════════ -->
+  <!-- ══ BLOC 1 — REVENUE ══ -->
   <div class="section-label">💰 Revenue d'Aujourd'hui</div>
 
   <div class="top-row">
-
-    <!-- Revenue du jour — carte principale -->
     <div class="rev-today-card">
       <div class="rev-today-glow"></div>
-
       <div class="rev-today-header">
         <div class="rev-today-icon">💰</div>
         <div>
@@ -48,8 +41,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Split Abo / Ventes -->
       <div class="rev-today-split">
         <div class="rev-split-item">
           <div class="rev-split-top">
@@ -64,9 +55,7 @@
             <div class="rev-pct-fill rev-pct-fill--abo" [style.width.%]="aboPercent()"></div>
           </div>
         </div>
-
         <div class="rev-split-sep"></div>
-
         <div class="rev-split-item">
           <div class="rev-split-top">
             <span class="rev-split-label">💊 Ventes</span>
@@ -83,7 +72,6 @@
       </div>
     </div>
 
-    <!-- Donut — Revenue par type -->
     <div class="card donut-card">
       <div class="card-header" style="border-bottom:none;padding-bottom:4px">
         <div class="card-title">🍩 Revenue par Type</div>
@@ -93,7 +81,7 @@
       </div>
       <div *ngIf="abonnementsParType().length > 0" class="donut-wrap">
         <div class="donut-canvas-wrap">
-          <canvas #donutCanvas  ></canvas>
+          <canvas #donutCanvas></canvas>
           <div class="donut-center">
             <div class="donut-pct">{{ abonnementsParType()[0]?.pourcentage || 0 }}%</div>
             <div class="donut-sub">{{ abonnementsParType()[0]?.label || '' }}</div>
@@ -110,12 +98,9 @@
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════
-       BLOC 2 — EXPIRATIONS PROCHES
-  ══════════════════════════════════════════════════════════════════ -->
+  <!-- ══ BLOC 2 — EXPIRATIONS ══ -->
   <div class="section-label">⚠️ Expirations Proches</div>
 
   <div class="card">
@@ -126,11 +111,9 @@
       </div>
       <button class="card-link" (click)="naviguerVersAbonnements()">Voir tout →</button>
     </div>
-
     <div *ngIf="expiringAbos().length === 0" class="empty-mini">
       <span style="font-size:11px;color:var(--green)">✅ Aucune expiration proche</span>
     </div>
-
     <div *ngIf="expiringAbos().length > 0" class="expiry-grid">
       <div *ngFor="let abo of expiringAbos()" class="expiry-item">
         <div class="expiry-avatar" [style.background]="abo.avatar_color">{{ abo.initials }}</div>
@@ -153,88 +136,115 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════
-       BLOC 3 — SÉANCES DU JOUR
-  ══════════════════════════════════════════════════════════════════ -->
-  <div class="section-label">📅 Séances du Jour</div>
+  <!-- ══ BLOC 3 — PLANNER ══ -->
+  <div class="section-label">📆 Réservations de la Semaine</div>
 
   <div class="card">
     <div class="card-header">
       <div class="card-title">
-        📅 Planning du Jour
-        <span class="badge">{{ currentDate() | date:'EEE d MMM' : '' : 'fr' }}</span>
+        📆 Réservations de la Semaine
+        <span class="badge" *ngIf="weekDateDebut() && weekDateFin()">
+          {{ weekDateDebut() | date:'d MMM' : '' : 'fr' }} – {{ weekDateFin() | date:'d MMM' : '' : 'fr' }}
+        </span>
       </div>
-      <button class="card-link" (click)="naviguerVersCreneaux()">Voir planning complet →</button>
+
+      <!-- Navigation semaine -->
+      <div class="week-nav">
+        <button class="week-nav-btn"
+                (click)="semainePrecedente()"
+                title="Semaine précédente">‹</button>
+        <button class="week-nav-today"
+                (click)="semaineAujourdhui()"
+                [class.week-nav-today--active]="isCurrentWeek()">
+          Aujourd'hui
+        </button>
+        <button class="week-nav-btn"
+                (click)="semaineSuivante()"
+                [disabled]="isCurrentWeek()"
+                [class.week-nav-btn--disabled]="isCurrentWeek()"
+                title="Semaine suivante">›</button>
+      </div>
+
+      <button class="card-link" (click)="naviguerVersCreneaux()">Gérer →</button>
     </div>
 
-    <div *ngIf="seancesJour().length === 0 && !isLoading()" class="empty-mini" style="padding:16px 20px">
-      <span style="font-size:11px;color:var(--t3)">Aucune séance planifiée pour aujourd'hui</span>
+    <div *ngIf="weeklyReservations().length === 0 && !isLoading()" class="empty-mini" style="padding:16px 20px">
+      <span style="font-size:11px;color:var(--t3)">Aucune réservation pour cette semaine</span>
     </div>
 
-    <div *ngIf="seancesJour().length > 0" class="table-scroll">
-      <table class="sessions-table">
-        <thead>
-          <tr>
-            <th>Heure</th>
-            <th>Réservations</th>
-            <th>Appareils</th>
-            <th>Dispo</th>
-            <th>Taux</th>
-            <th>Statut</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let s of seancesJour()" class="session-row">
-            <td><span class="time-mono">{{ s.heure_debut }} – {{ s.heure_fin }}</span></td>
-            <td>
-              <div class="progress-wrap">
-                <div class="progress-bar">
-                  <div class="progress-fill"
-                       [style.width.%]="getOccupancyPercent(s)"
-                       [style.background]="getBarColor(s)"></div>
+    <div *ngIf="weeklyReservations().length > 0" style="padding:16px 20px">
+
+      <!-- ══ PLANNER : grille unifiée (header + contenu par colonne) ══ -->
+      <div class="planner-container">
+        <div class="planner-unified">
+
+          <div *ngFor="let day of weeklyDays()" class="planner-col-wrap">
+
+            <!-- Header jour -->
+            <div class="planner-day-header"
+                 [class.planner-day-header--today]="day.dateStr === (currentDate() | date:'yyyy-MM-dd')">
+              <div class="day-name">{{ day.name }}</div>
+              <div class="day-num">{{ day.dayNum }}</div>
+              <div class="day-full-label">{{ day.label }}</div>
+            </div>
+
+            <!-- Contenu colonne -->
+            <div class="planner-column">
+
+              <div *ngIf="day.timeGroups.length === 0" class="planner-day-empty">
+                <span>☕</span>
+                <div class="empty-txt">Libre</div>
+              </div>
+
+              <div *ngFor="let group of day.timeGroups" class="planner-slot-group">
+                <div class="time-slot-header">
+                  <div class="time-slot-clock">🕒</div>
+                  <span class="time-slot-range">{{ group.time }}</span>
+                  <span class="time-slot-count">{{ group.clients.length }}</span>
                 </div>
-                <span class="progress-text">{{ s.reservations }}/{{ s.places_total }}</span>
-              </div>
-            </td>
-            <td>
-              <div class="devices-wrap">
-                <span *ngIf="s.i_motion > 0" class="device-chip device-chip--motion">⚡ {{ s.i_motion }}</span>
-                <span *ngIf="s.i_model > 0"  class="device-chip device-chip--model">🔷 {{ s.i_model }}</span>
-                <span *ngIf="s.reservations === 0" class="no-device">—</span>
-              </div>
-            </td>
-            <td>
-              <span class="dispo-num" [style.color]="s.disponibles === 0 ? '#f87171' : '#22c55e'">
-                {{ s.disponibles }}
-              </span>
-            </td>
-            <td>
-              <div class="taux-wrap">
-                <div class="taux-bar">
-                  <div class="taux-fill"
-                       [style.width.%]="getOccupancyPercent(s)"
-                       [style.background]="getBarColor(s)"></div>
+
+                <div *ngFor="let c of group.clients" class="client-compact-card">
+                  <div class="client-top-row">
+                    <div class="client-num-badge">#{{ c.num }}</div>
+                    <div class="client-details">
+                      <div class="client-name">{{ c.abonnement_client || c.client_nom || 'Client' }}</div>
+                      <div class="client-phone">📞 {{ c.client_telephone || 'Non renseigné' }}</div>
+                    </div>
+                  </div>
+                  <div class="client-status-bar"
+                       [ngClass]="{
+                         'csb--present': c.statut === 'present',
+                         'csb--absent':  c.statut === 'absent',
+                         'csb--annule':  c.statut === 'annule',
+                         'csb--attente': c.statut === 'en_attente'
+                       }">
+                    {{ c.statut === 'present'    ? 'Présent' :
+                       c.statut === 'en_attente' ? 'Attente' :
+                       c.statut === 'absent'     ? 'Absent'  :
+                       c.statut === 'annule'     ? 'Annulé'  :
+                       c.statut_label || c.statut || 'N/A' }}
+                  </div>
                 </div>
-                <span class="taux-txt">{{ getOccupancyPercent(s) }}%</span>
+
               </div>
-            </td>
-            <td>
-              <span class="statut-pill" [ngClass]="getStatutClass(s)">
-                {{ getStatutLabel(s) }}
-              </span>
-            </td>
-            <td>
-              <div class="action-btns">
-                <button class="action-btn action-btn--blue" (click)="naviguerVersCreneaux()">Gérer</button>
-                <button *ngIf="s.disponibles > 0"
-                        class="action-btn action-btn--green"
-                        (click)="ajouterReservation(s)">+ Réserver</button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="weekly-stats-bar" >
+        <div class="weekly-stat-pill">
+          <span class="stat-icon">🎟️</span>
+          <span class="stat-lbl">Total Réservations :</span>
+          <span class="stat-val" style="color:var(--blue)">{{ weeklyReservations().length }}</span>
+        </div>
+        <div class="weekly-stat-pill">
+          <span class="stat-icon">👥</span>
+          <span class="stat-lbl">Clients Uniques :</span>
+          <span class="stat-val" style="color:var(--green)">{{ weekTotalClients() }}</span>
+        </div>
+      </div>
     </div>
   </div>
 

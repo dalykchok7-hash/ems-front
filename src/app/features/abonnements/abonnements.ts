@@ -31,6 +31,7 @@ export interface AbonnementAPI {
   pack_detail:          PackAPI | null
   reduction:            string        // DecimalField → string
   prix_paye:            string
+  avance:               string        // DecimalField → string
   mode_paiement:        ModePaiement
   est_paye:             boolean
   date_paiement:        string | null
@@ -48,6 +49,7 @@ export interface AboCreatePayload {
   pack_id:        string
   mode_paiement:  ModePaiement | ''
   est_paye:       boolean
+  avance?:        number
   date_paiement:  string | null
   date_expiration: string | null
   reduction:      number
@@ -57,6 +59,7 @@ export interface AboCreatePayload {
 export interface AboEditPayload {
   mode_paiement?:  ModePaiement
   est_paye?:       boolean
+  avance?:         number
   date_paiement?:  string | null
   date_expiration?: string | null
   reduction?:      number
@@ -68,6 +71,7 @@ export interface AboFormLocal {
   pack_id:         string        // UUID du pack sélectionné
   mode_paiement:   ModePaiement
   est_paye:        boolean
+  avance:          number
   date_paiement:   string
   date_expiration: string
   reduction:       number
@@ -423,6 +427,7 @@ export class AbonnementsComponent implements OnInit {
       pack_id:         this.packs()[0]?.id ?? '',
       mode_paiement:   'cash',
       est_paye:        false,
+      avance:          0,
       date_paiement:   '',
       date_expiration: '',
       reduction:       0,
@@ -480,6 +485,7 @@ export class AbonnementsComponent implements OnInit {
       pack_id:         abo.pack,
       mode_paiement:   abo.mode_paiement || 'cash',
       est_paye:        abo.est_paye,
+      avance:          parseFloat(abo.avance || '0'),
       date_paiement:   abo.date_paiement   || '',
       date_expiration: abo.date_expiration || '',
       reduction:       parseFloat(abo.reduction || '0'),
@@ -635,6 +641,7 @@ export class AbonnementsComponent implements OnInit {
       pack_id:         this.aboForm.pack_id,
       mode_paiement:   this.aboForm.mode_paiement,
       est_paye:        this.aboForm.est_paye,
+      avance:          this.aboForm.est_paye ? 0 : this.aboForm.avance,
       date_paiement:   this.aboForm.date_paiement   || null,
       date_expiration: this.aboForm.date_expiration || null,
       reduction:       this.aboForm.reduction,
@@ -661,6 +668,7 @@ export class AbonnementsComponent implements OnInit {
     const payload: AboEditPayload = {
       mode_paiement:   this.aboForm.mode_paiement,
       est_paye:        this.aboForm.est_paye,
+      avance:          this.aboForm.est_paye ? 0 : this.aboForm.avance,
       date_paiement:   this.aboForm.date_paiement   || null,
       date_expiration: this.aboForm.date_expiration || null,
       reduction:       this.aboForm.reduction,

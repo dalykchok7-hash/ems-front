@@ -1,0 +1,112 @@
+<!-- ══ PAGE ════════════════════════════════════════════════════════ -->
+<div class="dash-page">
+
+  <div class="section-label">💰 Suivi des Avances</div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <span class="title-icon">💰</span>
+        <div>
+          <div>Clients avec Montant Restant</div>
+          <div class="card-subtitle">Suivi des avances clients et montants encore dus</div>
+        </div>
+        <span class="badge badge--red" *ngIf="clientsAvances().length > 0">
+          {{ clientsAvances().length }} clients en attente de paiement
+        </span>
+        <span class="badge badge--green" *ngIf="clientsAvances().length === 0">
+          Aucun paiement en attente
+        </span>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div *ngIf="isLoadingAvances()" class="chart-loading-dot"></div>
+        <div class="badge badge--red" style="font-weight:700;font-size:11px;padding:4px 10px">
+          Total restant : {{ totalRestantAvances().toLocaleString('fr-FR') }} DT
+        </div>
+        <button class="card-link" routerLink="/dashboard">← Tableau de bord</button>
+      </div>
+    </div>
+
+    <div class="avance-summary">
+      <div class="avance-stat">
+        <span class="avance-stat-icon">👥</span>
+        <div>
+          <div class="stat-label">Clients en attente</div>
+          <div class="stat-value">{{ clientsAvances().length }}</div>
+        </div>
+      </div>
+      <div class="avance-stat">
+        <span class="avance-stat-icon">💸</span>
+        <div>
+          <div class="stat-label">Total restant</div>
+          <div class="stat-value">{{ totalRestantAvances().toLocaleString('fr-FR') }} DT</div>
+        </div>
+      </div>
+      <div class="avance-stat">
+        <span class="avance-stat-icon">📄</span>
+        <div>
+          <div class="stat-label">État</div>
+          <div class="stat-value">{{ clientsAvances().length === 0 ? 'A jour' : 'En retard' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!isLoadingAvances() && clientsAvances().length === 0" class="empty-mini" style="padding:20px; text-align:center">
+      <span style="font-size:12px;color:var(--green)">✅ Excellent ! Tous les abonnements avec avance ont été soldés.</span>
+    </div>
+
+    <div *ngIf="clientsAvances().length > 0" style="padding:16px 20px">
+      <div class="table-scroll">
+        <table class="sessions-table">
+          <thead>
+            <tr>
+                  <th>👤 Client</th>
+              <th>📞 Téléphone</th>
+              <th>📦 Abonnement / Pack</th>
+              <th>💶 Prix Total</th>
+              <th>💸 Avance Versée</th>
+              <th>🧾 Montant Restant</th>
+              <th>📅 Date Début</th>
+              <th>⚡ Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of clientsAvances()" class="session-row">
+              <td>
+                <span style="font-weight:600;color:var(--t1)">{{ c.client_nom }}</span>
+              </td>
+              <td>
+                <span class="time-mono">{{ c.client_telephone || '—' }}</span>
+              </td>
+              <td>
+                <span style="color:var(--t2)">{{ c.pack_nom }}</span>
+              </td>
+              <td>
+                <span class="time-mono" style="color:var(--t1)">{{ c.prix_paye }} DT</span>
+              </td>
+              <td>
+                <span class="time-mono" style="color:var(--blue)">{{ c.avance }} DT</span>
+              </td>
+              <td>
+                <span class="time-mono" style="color:var(--red); font-weight: 700;">{{ c.montant_restant }} DT</span>
+              </td>
+              <td>
+                <span class="time-mono">{{ c.date_debut | date:'dd/MM/yyyy' }}</span>
+              </td>
+              <td>
+                <span class="statut-pill"
+                      [ngClass]="{
+                        'sp-ok': c.statut === 'actif',
+                        'sp-mid': c.statut === 'en_attente',
+                        'sp-full': c.statut === 'expire'
+                      }">
+                  {{ c.statut === 'actif' ? 'Actif' : c.statut === 'en_attente' ? 'En attente' : c.statut }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

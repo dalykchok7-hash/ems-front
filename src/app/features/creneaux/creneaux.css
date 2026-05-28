@@ -827,6 +827,7 @@
   transition: all 0.12s;
   font-family: inherit;
   white-space: nowrap;
+  text-decoration: none;
 }
 .action-btn--present {
   background: rgba(34,197,94,0.08);

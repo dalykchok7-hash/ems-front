@@ -123,8 +123,16 @@ getDashboardAlertes(): Observable<any> {
   return this.http.get<any>(`${this.baseUrl}/users/dashboard/alertes/`)
 }
 
-getDashboardClients(): Observable<any> {
-  return this.http.get<any>(`${this.baseUrl}/users/dashboard/clients/`)
+  getDashboardClients(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/users/dashboard/clients/`)
+  }
+
+  getDashboardAvances(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/users/dashboard/avances/`)
+  }
+
+ getWeeklyReservations(weekOffset: number = 0): Observable<any> {
+  return this.http.get<any>(`${this.baseUrl}/seances/weekly/?week_offset=${weekOffset}`);
 }
 
   // ── HISTORIQUE ────────────────────────────────────────────────
@@ -180,6 +188,7 @@ getDashboardClients(): Observable<any> {
     pack_id:          string
     mode_paiement?:   'cash' | 'tpe' | ''
     est_paye?:        boolean
+    avance?:          number
     date_paiement?:   string | null
     date_expiration?: string | null
     reduction?:       number
@@ -212,6 +221,7 @@ getDashboardClients(): Observable<any> {
   modifierAbonnement(id: string, payload: {
     mode_paiement?:   'cash' | 'tpe'
     est_paye?:        boolean
+    avance?:          number
     date_paiement?:   string | null
     date_expiration?: string | null
     reduction?:       number

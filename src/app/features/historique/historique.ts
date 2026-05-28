@@ -163,7 +163,7 @@ export class HistoriqueComponent implements OnInit {
       case 'deconnexion':
         return 'Déconnexion du système';
       case 'creer_client':
-        return `CIN : ${details.client_cin || '—'}`;
+        return 'Création de la fiche client';
       case 'creer_abonnement':
         return  ` Pack ${details.type || '—'} — ${details.prix_paye || '—'} DT `;
       case 'creer_reservation':

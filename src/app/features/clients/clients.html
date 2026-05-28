@@ -59,7 +59,6 @@
           
           <div class="cl-info">
             <div class="cl-name">{{ getFullName(c) }}</div>
-            <div class="cl-cin">{{ c.cin }}</div>
           </div>
           <div class="cl-badge">
             <div class="status-dot"
@@ -115,7 +114,6 @@
 
             <div class="profile-info-top">
               <div class="profile-name">{{ getFullName(selectedClient()!) }}</div>
-              <div class="profile-cin">🪪 {{ selectedClient()!.cin }}</div>
               <div class="profile-status-wrap">
                 <span class="statut-badge"
                       [class.statut-badge--actif]="selectedClient()!.statut === 'actif'"
@@ -135,7 +133,9 @@
           <div class="profile-details">
             <div class="pd-item">
               <div class="pd-label">Téléphone</div>
-              <div class="pd-value pd-value--phone">📞 {{ selectedClient()!.telephone_1 }}</div>
+              <div class="pd-value pd-value--phone">
+                <a [href]="'tel:' + selectedClient()!.telephone_1" class="hover:underline">📞 {{ selectedClient()!.telephone_1 }}</a>
+              </div>
             </div>
             <div class="pd-item">
               <div class="pd-label">Email</div>
@@ -163,7 +163,9 @@
             </div>
             <div class="pd-item" *ngIf="selectedClient()!.telephone_2">
               <div class="pd-label">Téléphone 2</div>
-              <div class="pd-value pd-value--phone">📞 {{ selectedClient()!.telephone_2 }}</div>
+              <div class="pd-value pd-value--phone">
+                <a [href]="'tel:' + selectedClient()!.telephone_2" class="hover:underline">📞 {{ selectedClient()!.telephone_2 }}</a>
+              </div>
             </div>
           </div>
         </div>

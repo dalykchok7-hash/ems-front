@@ -23,6 +23,7 @@ export class NavbarComponent implements OnInit {
     '/creneaux':     { title: 'Planning des Créneaux',   bread: 'Accueil / Créneaux'              },
     '/clients':      { title: 'Gestion des Clients',     bread: 'Accueil / Clients'               },
     '/abonnements':  { title: 'Abonnements',             bread: 'Accueil / Abonnements'           },
+    '/avances':      { title: 'Suivi des Avances',        bread: 'Accueil / Avances'               },
     '/ventes':       { title: 'Ventes & Paiements',      bread: 'Accueil / Ventes'                },
     '/rapports':     { title: 'Rapports & Statistiques', bread: 'Accueil / Rapports'              },
     '/parametres':   { title: 'Paramètres',              bread: 'Accueil / Paramètres'            },

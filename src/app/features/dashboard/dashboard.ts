@@ -22,17 +22,6 @@ export interface RevenueBlock {
   borderColor: string;
 }
 
-export interface SeanceRow {
-  id:           number;
-  heure_debut:  string;
-  heure_fin:    string;
-  reservations: number;
-  places_total: number;
-  disponibles:  number;
-  i_motion:     number;
-  i_model:      number;
-}
-
 export interface ExpiringAbo {
   initials:          string;
   nom:               string;
@@ -68,6 +57,17 @@ export interface ToastState {
   type:    'success' | 'warning' | 'info';
 }
 
+export interface WeeklyReservation {
+  id:                 string;
+  abonnement_client:  string;
+  seance_date:        string;
+  seance_heure_debut: string;
+  seance_heure_fin:   string;
+  statut:             string;
+  places_total:       number;
+  places_disponibles: number;
+}
+
 // ── Admin Component ───────────────────────────────────────────────
 
 @Component({
@@ -90,16 +90,21 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   activeChartMode = signal<'week' | 'month' | 'year'>('month');
   toast           = signal<ToastState>({ visible: false, message: '', type: 'success' });
 
-  // ── Change Password Modal ─────────────────────────────────────
+  // ── Change Password Modal ────────────────────────────────────────
   showPasswordModal = signal<boolean>(false);
-  passwordForm = { old_password: '', new_password: '', confirm_password: '' };
-  passwordError = signal<string | null>(null);
-  passwordLoading = signal<boolean>(false);
+  passwordForm      = { old_password: '', new_password: '', confirm_password: '' };
+  passwordError     = signal<string | null>(null);
+  passwordLoading   = signal<boolean>(false);
 
-  // Loading granulaire par bloc
+  // ── Loading ──────────────────────────────────────────────────────
   isLoadingRevenus = signal<boolean>(false);
   isLoadingAlertes = signal<boolean>(false);
   isLoadingClients = signal<boolean>(false);
+  isLoadingWeekly  = signal<boolean>(false);
+
+  // ── Navigation semaine ───────────────────────────────────────────
+  currentWeekOffset = signal<number>(0);
+  isCurrentWeek     = computed(() => this.currentWeekOffset() === 0);
 
   chartsReady = false;
 
@@ -115,22 +120,26 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     { key: 'year',  label: 'Tout', periode: 'tout' },
   ];
 
-  // Cache courbe par mode
   CHART_DATA: Record<string, { labels: string[]; data: number[] }> = {
     week:  { labels: [], data: [] },
     month: { labels: [], data: [] },
     year:  { labels: [], data: [] },
   };
 
-  // ── Data signals ────────────────────────────────────────────────
+  // ── Data signals ─────────────────────────────────────────────────
   revenueBlocs       = signal<RevenueBlock[]>([]);
   abonnementsParType = signal<any[]>([]);
   expiringAbos       = signal<ExpiringAbo[]>([]);
   produitsAlerte     = signal<ExpiringProduit[]>([]);
   clientStats        = signal<ClientStats>({ total: 0, actifs: 0, inactifs: 0, nouveaux_mois: 0 });
-  seancesJour:         SeanceRow[] = [];
 
-  // ── Computed ────────────────────────────────────────────────────
+  weeklyReservations = signal<WeeklyReservation[]>([]);
+  weekTotalClients   = signal<number>(0);
+  weekDateDebut      = signal<string>('');
+  weekDateFin        = signal<string>('');
+  weeklyDays         = signal<any[]>([]);
+
+  // ── Computed ─────────────────────────────────────────────────────
   formattedDate = computed(() =>
     this.currentDate().toLocaleDateString('fr-FR', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
@@ -138,7 +147,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   );
 
   isLoading = computed(() =>
-    this.isLoadingRevenus() || this.isLoadingAlertes() || this.isLoadingClients()
+    this.isLoadingRevenus() || this.isLoadingAlertes() || this.isLoadingClients() || this.isLoadingWeekly()
   );
 
   chartFooterStats = computed(() => {
@@ -171,12 +180,12 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     ];
   });
 
-  // ── Lifecycle ───────────────────────────────────────────────────
+  // ── Lifecycle ────────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadRevenus('month');
     this.loadAlertes();
     this.loadClients();
-    this.loadSeancesJour();
+    this.loadWeeklyReservations();
   }
 
   ngAfterViewInit(): void {
@@ -209,7 +218,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
 
         this.revenueBlocs.set([
           {
-            label: "Revenue du Jour",
+            label: 'Revenue du Jour',
             total:       parseFloat(jour.total),
             abonnements: parseFloat(jour.abonnements),
             ventes:      parseFloat(jour.ventes),
@@ -244,12 +253,12 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         let mapped: any[] = [];
         if (Array.isArray(parTypeSource) && parTypeSource.length > 0) {
           mapped = parTypeSource.map((p: any) => ({
-            label: p.label || p.type || p.pack || p.nom || 'Inconnu',
+            label:       p.label || p.type || p.pack || p.nom || 'Inconnu',
             pourcentage: p.pourcentage ?? p.count ?? p.total ?? p.valeur ?? p.quantite ?? p.montant ?? 0
           }));
         } else if (parTypeSource && typeof parTypeSource === 'object' && Object.keys(parTypeSource).length > 0) {
           mapped = Object.keys(parTypeSource).map(key => ({
-            label: key,
+            label:       key,
             pourcentage: parTypeSource[key]
           }));
         }
@@ -277,8 +286,8 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
         this.expiringAbos.set(
           (data.expirations_proches || []).map((e: any) => ({
             initials:          this.getInitials(e.client_nom || '—'),
-            nom:               e.client_nom || '—',
-            type:              e.type       || '-',
+            nom:               e.client_nom        || '—',
+            type:              e.type              || '-',
             seances_restantes: e.seances_restantes || 0,
             avatar_color:      'linear-gradient(135deg,#f59e0b,#d97706)',
             bar_percent:       Math.min(((e.seances_restantes || 0) / 10) * 100, 100),
@@ -321,12 +330,12 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
           let mapped: any[] = [];
           if (Array.isArray(parTypeSource) && parTypeSource.length > 0) {
             mapped = parTypeSource.map((p: any) => ({
-              label: p.label || p.type || p.pack || p.nom || 'Inconnu',
+              label:       p.label || p.type || p.pack || p.nom || 'Inconnu',
               pourcentage: p.pourcentage ?? p.count ?? p.total ?? p.valeur ?? p.quantite ?? p.montant ?? 0
             }));
           } else if (parTypeSource && typeof parTypeSource === 'object' && Object.keys(parTypeSource).length > 0) {
             mapped = Object.keys(parTypeSource).map(key => ({
-              label: key,
+              label:       key,
               pourcentage: parTypeSource[key]
             }));
           }
@@ -343,6 +352,105 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     });
   }
 
+  // ══════════════════════════════════════════════════════════════════
+  // BLOC 4 — RÉSERVATIONS DE LA SEMAINE
+  // ══════════════════════════════════════════════════════════════════
+
+  semainePrecedente(): void {
+    this.currentWeekOffset.update(v => v - 1);
+    this.loadWeeklyReservations();
+  }
+
+  semaineSuivante(): void {
+    this.currentWeekOffset.update(v => v + 1);
+    this.loadWeeklyReservations();
+  }
+
+  semaineAujourdhui(): void {
+    if (this.isCurrentWeek()) return;
+    this.currentWeekOffset.set(0);
+    this.loadWeeklyReservations();
+  }
+
+  loadWeeklyReservations(): void {
+    this.isLoadingWeekly.set(true);
+    const offset = this.currentWeekOffset();
+    this.apiService.getWeeklyReservations(offset).subscribe({
+      next: (data: any) => {
+        this.isLoadingWeekly.set(false);
+        const reservations = data.reservations || [];
+        this.weeklyReservations.set(reservations);
+        this.weekTotalClients.set(data.total_clients || 0);
+        this.weekDateDebut.set(data.date_debut       || '');
+        this.weekDateFin.set(data.date_fin           || '');
+        this.buildWeeklyDays(data.date_debut, reservations);
+      },
+      error: (err: any) => {
+        this.isLoadingWeekly.set(false);
+        this.showToast(`Erreur réservations semaine (${err.status})`, 'warning');
+      }
+    });
+  }
+
+  buildWeeklyDays(dateDebutStr: string, reservations: any[]): void {
+    if (!dateDebutStr) return;
+    const baseDate = new Date(dateDebutStr.replace(/-/g, '/'));
+    const daysData: any[] = [];
+    const DAY_NAMES  = ['LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM', 'DIM'];
+    const DAY_LABELS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+
+    for (let i = 0; i < 7; i++) {
+      const current = new Date(baseDate);
+      current.setDate(baseDate.getDate() + i);
+
+      const yyyy    = current.getFullYear();
+      const mm      = String(current.getMonth() + 1).padStart(2, '0');
+      const dd      = String(current.getDate()).padStart(2, '0');
+      const dateStr = `${yyyy}-${mm}-${dd}`;
+
+      const dayReservations = reservations.filter((r: any) => {
+        let rDate = r.seance_date || '';
+        if (rDate.length > 10) rDate = rDate.substring(0, 10);
+        if (!rDate && r.seance_info) rDate = r.seance_info.split(' ')[0];
+        return rDate === dateStr;
+      });
+
+      dayReservations.sort((a: any, b: any) => {
+        const timeA = (a.seance_heure_debut || '00:00').substring(0, 5);
+        const timeB = (b.seance_heure_debut || '00:00').substring(0, 5);
+        return timeA.localeCompare(timeB);
+      });
+
+      const timeGroupsMap = new Map<string, any[]>();
+      dayReservations.forEach((r: any) => {
+        const hDebut = (r.seance_heure_debut || '??:??').substring(0, 5);
+        const hFin   = (r.seance_heure_fin   || '??:??').substring(0, 5);
+        const key    = `${hDebut} – ${hFin}`;
+        if (!timeGroupsMap.has(key)) timeGroupsMap.set(key, []);
+        timeGroupsMap.get(key)!.push(r);
+      });
+
+      const timeGroups = Array.from(timeGroupsMap.entries()).map(([time, clients]) => ({
+        time,
+        heure_debut: clients[0]?.seance_heure_debut || '',
+        heure_fin:   clients[0]?.seance_heure_fin   || '',
+        clients:     clients.map((c: any, idx: number) => ({ ...c, num: idx + 1 })),
+      }));
+
+      daysData.push({
+        name:         DAY_NAMES[i],
+        label:        DAY_LABELS[i],
+        dayNum:       String(current.getDate()),
+        dateStr,
+        reservations: dayReservations,
+        timeGroups,
+      });
+    }
+
+    this.weeklyDays.set(daysData);
+  }
+
+  // ── Chart mode switch ─────────────────────────────────────────────
   setChartMode(mode: 'week' | 'month' | 'year'): void {
     if (this.activeChartMode() === mode) return;
     this.activeChartMode.set(mode);
@@ -351,6 +459,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     this.loadRevenus(mode);
   }
 
+  // ── Charts ────────────────────────────────────────────────────────
   private buildRevenueChart(mode: 'week' | 'month' | 'year'): void {
     const Chart = (window as any)['Chart'];
     if (!Chart || !this.revenueCanvasRef) return;
@@ -422,6 +531,7 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     });
   }
 
+  // ── Helpers ───────────────────────────────────────────────────────
   getDonutColor(i: number): string { return this.DONUT_COLORS[i % this.DONUT_COLORS.length]; }
 
   getBlocAboPercent(bloc: RevenueBlock): number {
@@ -430,14 +540,11 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
   getBlocVentePercent(bloc: RevenueBlock): number {
     return bloc.total ? Math.round((bloc.ventes / bloc.total) * 100) : 0;
   }
-
   getExpiryColor(j: number): string {
     return j === 0 ? 'var(--red)' : j === 1 ? 'var(--amber)' : 'var(--green)';
   }
-
   getProduitStockColor(p: ExpiringProduit): string { return p.stock === 0 ? '#f87171' : '#fbbf24'; }
   getProduitStockLabel(p: ExpiringProduit): string { return p.stock === 0 ? 'Rupture' : 'Stock faible'; }
-
   getInitials(nom: string): string {
     return nom.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   }
@@ -445,50 +552,13 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     return n.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
   }
 
-  naviguerVersCreneaux(seance?: SeanceRow): void { this.router.navigate(['/creneaux']); }
-  ajouterReservation(seance: SeanceRow): void {
-    this.showToast(`Réservation ajoutée à ${seance.heure_debut}`, 'success');
-  }
-  getOccupancyPercent(s: SeanceRow): number {
-    return s.places_total ? Math.round((s.reservations / s.places_total) * 100) : 0;
-  }
-  getBarColor(s: SeanceRow): string {
-    const p = this.getOccupancyPercent(s);
-    return p === 100 ? 'var(--red)' : p >= 60 ? 'var(--amber)' : 'var(--green)';
-  }
-  getStatutLabel(s: SeanceRow): string {
-    if (s.disponibles === 0)  return 'Complet';
-    if (s.reservations === 0) return 'Vide';
-    return this.getOccupancyPercent(s) >= 60 ? 'Bientôt Plein' : 'Disponible';
-  }
-  getStatutClass(s: SeanceRow): string {
-    if (s.disponibles === 0)  return 'sp-full';
-    if (s.reservations === 0) return 'sp-empty';
-    return this.getOccupancyPercent(s) >= 60 ? 'sp-mid' : 'sp-ok';
-  }
+  naviguerVersCreneaux():    void { this.router.navigate(['/creneaux']);    }
+  naviguerVersAbonnements(): void { this.router.navigate(['/abonnements']); }
+  naviguerVersVentes():      void { this.router.navigate(['/ventes']);      }
+  naviguerVersProduits():    void { this.router.navigate(['/produits']);     }
+  naviguerVersClients():     void { this.router.navigate(['/clients']);      }
 
-  loadSeancesJour(): void {
-    const today = new Date().toISOString().split('T')[0];
-    this.apiService.getSeances(today).subscribe({
-      next: (res: any) => {
-        const data = res.results || res;
-        this.seancesJour = data.map((s: any) => ({
-          id: s.id,
-          heure_debut: s.heure_debut?.substring(0, 5) || '',
-          heure_fin: s.heure_fin?.substring(0, 5) || '',
-          reservations: s.reservations ?? s.reservations_count ?? 0,
-          places_total: s.places_total ?? s.places ?? 0,
-          disponibles: s.places_disponibles ?? s.disponibles ?? 0,
-          i_motion: s.i_motion ?? 0,
-          i_model: s.i_model ?? 0,
-        }));
-      },
-      error: (err) => {
-        this.showToast(`Erreur séances (${err.status})`, 'warning');
-      }
-    });
-  }
-
+  // ── Toast ─────────────────────────────────────────────────────────
   showToast(message: string, type: 'success' | 'warning' | 'info' = 'success'): void {
     clearTimeout(this.toastTimer);
     this.toast.set({ visible: true, message, type });
@@ -498,20 +568,12 @@ export class AdminDashboardComponent implements OnInit, AfterViewInit, OnDestroy
     );
   }
 
-  naviguerVersAbonnements(): void { this.router.navigate(['/abonnements']); }
-  naviguerVersVentes():      void { this.router.navigate(['/ventes']); }
-  naviguerVersProduits():    void { this.router.navigate(['/produits']); }
-  naviguerVersClients():     void { this.router.navigate(['/clients']); }
-
   openPasswordModal(): void {
     this.passwordForm = { old_password: '', new_password: '', confirm_password: '' };
     this.passwordError.set(null);
     this.showPasswordModal.set(true);
   }
-
-  closePasswordModal(): void {
-    this.showPasswordModal.set(false);
-  }
+  closePasswordModal(): void { this.showPasswordModal.set(false); }
 
   savePassword(): void {
     const f = this.passwordForm;

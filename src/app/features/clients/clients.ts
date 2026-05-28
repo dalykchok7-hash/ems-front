@@ -376,11 +376,10 @@ previousPage(): void {
   // ══════════════════════════════════════════════════════════════════
 
   selectClient(id: string | number): void {
-  const strId = String(id);
-  this.selectedClientId.set(strId);
-  const c = this.clients().find(x => String(x.id) === strId);
-  if (!c?.cin) return;
-  
+    const strId = String(id);
+    this.selectedClientId.set(strId);
+    const c = this.clients().find(x => String(x.id) === strId);
+    if (!c) return;
 
     // Reset état
     this.detailedClient.set(null);
@@ -389,10 +388,10 @@ previousPage(): void {
     this.historiqueSeances.set([]);
     this.activeTab.set('abonnement'); // revenir au 1er onglet
 
-    // Charger les données
+    // Charger les données (utiliser CIN)
     this.loadClientDetails(c.cin);
     this.loadActiveSubscription(c.cin);
-    // On charge aussi les historiques en avance (lazy optionnel)
+    // Charger les historiques (utiliser CIN)
     this.loadHistoriqueAbonnements(c.cin);
     this.loadHistoriqueSeances(c.cin);
   }
@@ -404,14 +403,14 @@ previousPage(): void {
   setTab(tab: 'abonnement' | 'historique_abo' | 'seances'): void {
     this.activeTab.set(tab);
     const c = this.selectedClient();
-    if (!c?.cin) return;
+    if (!c) return;
 
     // Recharger si vide (lazy loading optionnel)
     if (tab === 'historique_abo' && this.historiqueAbonnements().length === 0) {
-      this.loadHistoriqueAbonnements(c.cin);
+      this.loadHistoriqueAbonnements(c.id);
     }
     if (tab === 'seances' && this.historiqueSeances().length === 0) {
-      this.loadHistoriqueSeances(c.cin);
+      this.loadHistoriqueSeances(c.id);
     }
   }
 
@@ -540,10 +539,10 @@ saveClient(): void {
     this.formErrors.prenom = "Prénom obligatoire";
   }
 
-  if (!this.clientForm.cin?.trim()) {
-    this.formErrors.cin = "CIN obligatoire";
-  } else if (!/^\d{8}$/.test(this.clientForm.cin)) {
-    this.formErrors.cin = "CIN invalide (8 chiffres)";
+  if (this.clientForm.cin?.trim()) {
+    if (!/^\d{8}$/.test(this.clientForm.cin)) {
+      this.formErrors.cin = "CIN invalide (8 chiffres)";
+    }
   }
 
   if (!this.clientForm.telephone_1?.trim()) {
@@ -566,7 +565,7 @@ saveClient(): void {
   const formData = new FormData();
   formData.append('nom', this.clientForm.nom);
   formData.append('prenom', this.clientForm.prenom);
-  formData.append('cin', this.clientForm.cin);
+  formData.append('cin', this.clientForm.cin || '');
   formData.append('telephone_1', this.clientForm.telephone_1);
 
   if (this.clientForm.telephone_2) {
@@ -605,11 +604,11 @@ saveClient(): void {
     const c = this.selectedClient();
     if (!c) return;
 
-    this.apiService.modifierClient(c.cin, formData).subscribe({
+    this.apiService.modifierClient(c.id, formData).subscribe({
       next: () => {
         this.showToast('✅ Client modifié', 'success');
         this.loadClients(this.searchValue);
-        this.loadClientDetails(c.cin);
+        this.loadClientDetails(c.id);
         this.closeModal();
       },
       error: (err: any) => {
@@ -639,7 +638,7 @@ handleBackendErrors(err: any): void {
     if (!c) return;
     if (!confirm(`Supprimer ${c.prenom} ${c.nom} ?`)) return;
 
-    this.apiService.supprimerClient(c.cin).subscribe({
+    this.apiService.supprimerClient(c.id).subscribe({
       next: () => {
         this.showToast('🗑 Client supprimé', 'success');
         this.selectedClientId.set(null);
@@ -655,14 +654,14 @@ handleBackendErrors(err: any): void {
 
   renouvelerAbo(): void {
     const c = this.selectedClient();
-    if (!c?.cin) return;
+    if (!c) return;
     const typeAbo = this.activeAbo()?.type_key || 'pack10';
 
-    this.apiService.createAbonnement(c.cin, { pack_id: typeAbo }).subscribe({
+    this.apiService.createAbonnement(c.id, { pack_id: typeAbo }).subscribe({
       next: () => {
         this.showToast('✅ Renouvellement effectué', 'success');
-        this.loadActiveSubscription(c.cin);
-        this.loadHistoriqueAbonnements(c.cin);
+        this.loadActiveSubscription(c.id);
+        this.loadHistoriqueAbonnements(c.id);
       },
       error: (err: any) => {
         const msg = err.error?.error || 'Erreur renouvellement';

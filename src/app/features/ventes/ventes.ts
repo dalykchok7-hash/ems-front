@@ -35,7 +35,7 @@ export interface VenteAPI {
   personnel?:    string;
   personnel_nom?:string;
   lignes:        LigneVenteAPI[];
-  montant_total: string;
+  prix_total:    string;
   created_at:    string;
 }
 
@@ -127,7 +127,7 @@ export class VentesComponent implements OnInit {
   // KPIs historique
   totalVentes     = computed(() => this.ventes().length);
   totalRevenuJour = computed(() =>
-    this.ventes().reduce((sum, v) => sum + parseFloat(v.montant_total || '0'), 0)
+    this.ventes().reduce((sum, v) => sum + parseFloat(v.prix_total || '0'), 0)
   );
   nbArticlesVendus = computed(() =>
     this.ventes().reduce((sum, v) =>
@@ -328,7 +328,7 @@ export class VentesComponent implements OnInit {
     this.apiService.creerVente(payload).subscribe({
       next: (res: VenteAPI) => {
         this.isCreatingVente.set(false);
-        const total = parseFloat(res.montant_total || '0');
+        const total = parseFloat(res.prix_total || '0');
         this.showToast(
           `✅ Vente confirmée — ${total.toLocaleString('fr-FR')} DT`,
           'success'

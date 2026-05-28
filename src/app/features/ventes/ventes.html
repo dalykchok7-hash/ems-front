@@ -276,7 +276,7 @@
             </div>
           </div>
           <div class="vente-right">
-            <div class="vente-total">{{ formatPrix(vente.montant_total) }}</div>
+            <div class="vente-total">{{ formatPrix(vente.prix_total) }}</div>
             <div class="vente-articles">{{ vente.lignes.reduce((sum, l) => sum + l.quantite, 0) }} art.</div>
             <div class="vente-chevron">{{ selectedVenteId() === vente.id ? '▲' : '▼' }}</div>
           </div>
@@ -295,7 +295,7 @@
           </div>
           <div class="vente-total-detail">
             <span>Total</span>
-            <span style="color:#22c55e;font-weight:800">{{ formatPrix(vente.montant_total) }}</span>
+            <span style="color:#22c55e;font-weight:800">{{ formatPrix(vente.prix_total) }}</span>
           </div>
         </div>
 
