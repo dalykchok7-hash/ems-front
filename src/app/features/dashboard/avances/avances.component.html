@@ -68,6 +68,7 @@
               <th>🧾 Montant Restant</th>
               <th>📅 Date Début</th>
               <th>⚡ Statut</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -103,9 +104,109 @@
                   {{ c.statut === 'actif' ? 'Actif' : c.statut === 'en_attente' ? 'En attente' : c.statut }}
                 </span>
               </td>
+              <td>
+                <button class="action-btn" (click)="openEditAbonnement(c)">✏️ Modifier</button>
+              </td>
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <div *ngIf="showEditModal() && editAboForm() as editForm" class="modal-backdrop">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div>
+            <div class="modal-title">✏️ Modifier l'abonnement</div>
+            <div class="modal-sub">Mettez à jour le paiement et le statut de l'abonnement.</div>
+          </div>
+          <button class="modal-close" (click)="closeEditModal()">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="client-recap">
+            <div class="client-recap-av" [style.background]="getAvatarColor(editForm.client_nom)">
+              {{ getAvatarInitials(editForm.client_nom) }}
+            </div>
+            <div>
+              <div class="client-recap-name">{{ editForm.client_nom }}</div>
+              <div class="client-recap-meta">
+                <span>📦</span>
+                Pack actuel : {{ editForm.pack_nom }}
+              </div>
+            </div>
+            <div class="client-recap-abo">
+              <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">Montant restant</div>
+              <div style="font-size:18px;font-weight:800;color:#fff">{{ editForm.montant_restant }} DT</div>
+            </div>
+          </div>
+
+          <div class="remise-section">
+            <div class="remise-section-header">
+              <span class="remise-section-title">🏷️ Remise</span>
+              <span *ngIf="editForm.reduction > 0" class="remise-active-badge">-{{ editForm.reduction }}% appliquée</span>
+            </div>
+
+            <div class="prix-base-row">
+              <span class="prix-base-label">Prix du pack :</span>
+              <span class="prix-base-val">{{ editForm.prix_paye }} DT</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Remise (%)</label>
+              <div class="remise-input-wrap">
+                <input class="form-input remise-input" type="number" min="0" max="100" [(ngModel)]="editForm.reduction" placeholder="0" />
+                <span class="remise-unit">%</span>
+              </div>
+              <div class="remise-preview" *ngIf="editForm.reduction > 0">
+                💸 Réduction : -{{ ((editForm.prix_paye * editForm.reduction) / 100) | number:'1.0-0' }} DT
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Date d'expiration</label>
+              <input class="form-input" type="date" [(ngModel)]="editForm.date_expiration" />
+              <div style="font-size:9px;color:var(--t3);margin-top:3px">Laissez vide pour utiliser la durée standard du pack</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mode de paiement</label>
+              <select class="form-input form-select" [(ngModel)]="editForm.mode_paiement" (ngModelChange)="setModePaiement($event)">
+                <option value="cash">💵 Espèces</option>
+                <option value="tpe">💳 Carte bancaire</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Statut paiement</label>
+              <label class="paye-toggle">
+                <span class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="editForm.est_paye" (change)="onEstPayeChange(editForm.est_paye)" />
+                  <span class="toggle-slider"></span>
+                </span>
+                <span>{{ editForm.est_paye ? 'Payé' : 'En attente de paiement' }}</span>
+              </label>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Avance payée (DT)</label>
+              <input class="form-input" type="number" min="0" [(ngModel)]="editForm.avance" [disabled]="editForm.est_paye" />
+            </div>
+          </div>
+
+          <div *ngIf="editFormError()" class="modal-alert modal-alert--warning">
+            <span class="modal-alert-icon">⚠️</span> {{ editFormError() }}
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-primary" [disabled]="isSavingEdit()" (click)="saveEditAbonnement()">
+            {{ isSavingEdit() ? 'Enregistrement...' : 'Enregistrer' }}
+          </button>
+          <button class="btn-secondary" (click)="closeEditModal()">Annuler</button>
+        </div>
       </div>
     </div>
   </div>
