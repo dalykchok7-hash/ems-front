@@ -16,6 +16,10 @@ interface AvanceClient {
   date_debut: string;
   statut: string;
   mode_paiement?: 'cash' | 'tpe';
+  reduction: number;
+  est_paye: boolean;
+  date_paiement: string;
+  date_expiration: string;
 }
 
 interface EditAbonnementForm {
@@ -89,18 +93,18 @@ export class AvancesComponent implements OnInit {
   openEditAbonnement(abo: AvanceClient): void {
     this.editFormError.set(null);
     this.editAboForm.set({
-      abonnement_id:  abo.abonnement_id,
-      client_nom:     abo.client_nom,
-      pack_nom:       abo.pack_nom,
-      prix_paye:      abo.prix_paye,
+      abonnement_id:   abo.abonnement_id,
+      client_nom:      abo.client_nom,
+      pack_nom:        abo.pack_nom,
+      prix_paye:       abo.prix_paye,
       montant_restant: abo.montant_restant,
-      statut:         abo.statut,
-      mode_paiement:  abo.mode_paiement || 'cash',
-      est_paye:        false,
+      statut:          abo.statut,
+      mode_paiement:   abo.mode_paiement || 'cash',
+      est_paye:        abo.est_paye,
       avance:          abo.avance,
-      reduction:       0,
-      date_paiement:   '',
-      date_expiration: '',
+      reduction:       abo.reduction,
+      date_paiement:   abo.date_paiement,
+      date_expiration: abo.date_expiration,
     });
     this.showEditModal.set(true);
   }

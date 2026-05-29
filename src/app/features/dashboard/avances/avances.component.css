@@ -137,6 +137,19 @@
   background: rgba(248, 113, 113, 0.12);
 }
 
+.remise-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  background: rgba(34,212,124,0.1);
+  border: 1px solid rgba(34,212,124,0.2);
+  border-radius: 4px;
+  font-size: 9px;
+  color: var(--green);
+  font-weight: 700;
+}
+
 .card-link {
   border: 1px solid rgba(255,255,255,0.12);
   background: transparent;

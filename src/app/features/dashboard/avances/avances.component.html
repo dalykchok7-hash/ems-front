@@ -74,7 +74,12 @@
           <tbody>
             <tr *ngFor="let c of clientsAvances()" class="session-row">
               <td>
-                <span style="font-weight:600;color:var(--t1)">{{ c.client_nom }}</span>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <span style="font-weight:600;color:var(--t1)">{{ c.client_nom }}</span>
+                  <span *ngIf="c.reduction > 0" class="remise-badge">
+                    🏷️ -{{ c.reduction }}%
+                  </span>
+                </div>
               </td>
               <td>
                 <span class="time-mono">{{ c.client_telephone || '—' }}</span>
