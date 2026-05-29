@@ -126,7 +126,7 @@ export class CreneauxComponent implements OnInit {
     if (!sId) return [];
 
     return this.allReservations().filter(r =>
-      String(r.seance_id ?? (r as any).seance) === String(sId)
+      String(r.seance_id ?? (r as any).seance) === String(sId) && r.statut !== 'annule'
     );
   });
 
