@@ -142,7 +142,7 @@
             </div>
             <div class="client-recap-abo">
               <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">Montant restant</div>
-              <div style="font-size:18px;font-weight:800;color:#fff">{{ editForm.montant_restant }} DT</div>
+              <div style="font-size:18px;font-weight:800;color:#fff">{{ getDynamicMontantRestant() }} DT</div>
             </div>
           </div>
 
@@ -153,8 +153,12 @@
             </div>
 
             <div class="prix-base-row">
-              <span class="prix-base-label">Prix du pack :</span>
-              <span class="prix-base-val">{{ editForm.prix_paye }} DT</span>
+              <span class="prix-base-label">Prix de base du pack :</span>
+              <span class="prix-base-val">{{ editForm.pack_prix }} DT</span>
+            </div>
+            <div class="prix-base-row" style="margin-top: 4px;" *ngIf="editForm.reduction > 0">
+              <span class="prix-base-label" style="color: var(--green);">Prix après remise :</span>
+              <span class="prix-base-val" style="color: var(--green); font-weight: 700;">{{ getDynamicPrixPaye() }} DT</span>
             </div>
 
             <div class="form-group">
@@ -164,7 +168,7 @@
                 <span class="remise-unit">%</span>
               </div>
               <div class="remise-preview" *ngIf="editForm.reduction > 0">
-                💸 Réduction : -{{ ((editForm.prix_paye * editForm.reduction) / 100) | number:'1.0-0' }} DT
+                💸 Réduction : -{{ ((editForm.pack_prix * editForm.reduction) / 100) | number:'1.0-0' }} DT
               </div>
             </div>
           </div>

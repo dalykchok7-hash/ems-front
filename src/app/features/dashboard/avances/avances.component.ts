@@ -10,6 +10,7 @@ interface AvanceClient {
   client_cin: string;
   client_telephone?: string;
   pack_nom: string;
+  pack_prix: number;
   prix_paye: number;
   avance: number;
   montant_restant: number;
@@ -26,6 +27,7 @@ interface EditAbonnementForm {
   abonnement_id: string;
   client_nom: string;
   pack_nom: string;
+  pack_prix: number;
   prix_paye: number;
   montant_restant: number;
   statut: string;
@@ -96,6 +98,7 @@ export class AvancesComponent implements OnInit {
       abonnement_id:   abo.abonnement_id,
       client_nom:      abo.client_nom,
       pack_nom:        abo.pack_nom,
+      pack_prix:       abo.pack_prix || 0,
       prix_paye:       abo.prix_paye,
       montant_restant: abo.montant_restant,
       statut:          abo.statut,
@@ -122,7 +125,6 @@ export class AvancesComponent implements OnInit {
       ...form,
       est_paye: value,
       date_paiement: value ? (form.date_paiement || new Date().toISOString().split('T')[0]) : '',
-      avance: value ? 0 : form.avance,
     });
   }
 
@@ -153,6 +155,31 @@ export class AvancesComponent implements OnInit {
     this.editAboForm.set({ ...form, [field]: value });
   }
 
+  getDynamicPrixPaye(): number {
+    const form = this.editAboForm();
+    if (!form) return 0;
+    const packPrix = form.pack_prix || 0;
+    const reduction = form.reduction || 0;
+    return Math.round(packPrix * (1 - reduction / 100));
+  }
+
+  getDynamicMontantRestant(): number {
+    const form = this.editAboForm();
+    if (!form) return 0;
+    if (form.est_paye) return 0;
+    const prixPaye = this.getDynamicPrixPaye();
+    return Math.max(0, prixPaye - (form.avance || 0));
+  }
+
+  extractErrorMessage(err: any): string {
+    if (!err?.error) return 'Erreur inconnue';
+    if (err.error.error) return err.error.error;
+    if (err.error.non_field_errors?.length) return err.error.non_field_errors[0];
+    const firstKey = Object.keys(err.error)[0];
+    if (firstKey && err.error[firstKey]?.length) return err.error[firstKey][0];
+    return 'Erreur serveur';
+  }
+
   saveEditAbonnement(): void {
     const form = this.editAboForm();
     if (!form) return;
@@ -163,7 +190,7 @@ export class AvancesComponent implements OnInit {
     const payload = {
       mode_paiement:  form.mode_paiement,
       est_paye:       form.est_paye,
-      avance:         form.est_paye ? 0 : form.avance,
+      avance:         form.avance,
       date_paiement:  form.date_paiement || null,
       date_expiration: form.date_expiration || null,
       reduction:      form.reduction,
@@ -178,7 +205,7 @@ export class AvancesComponent implements OnInit {
       },
       error: (err: any) => {
         this.isSavingEdit.set(false);
-        const msg = err?.error?.detail || `Erreur édition (${err.status})`;
+        const msg = this.extractErrorMessage(err);
         this.editFormError.set(msg);
         this.showToast(msg, 'warning');
       }
