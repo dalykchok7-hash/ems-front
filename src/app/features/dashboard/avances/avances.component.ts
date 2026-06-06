@@ -188,12 +188,12 @@ export class AvancesComponent implements OnInit {
     this.isSavingEdit.set(true);
 
     const payload = {
-      mode_paiement:  form.mode_paiement,
-      est_paye:       form.est_paye,
-      avance:         form.avance,
-      date_paiement:  form.date_paiement || null,
+      mode_paiement:   form.mode_paiement,
+      est_paye:        form.est_paye,
+      avance:          form.est_paye ? 0 : (form.avance || 0),
+      date_paiement:   form.est_paye ? (form.date_paiement || new Date().toISOString().split('T')[0]) : null,
       date_expiration: form.date_expiration || null,
-      reduction:      form.reduction,
+      reduction:       form.reduction,
     };
 
     this.apiService.modifierAbonnement(form.abonnement_id, payload).subscribe({

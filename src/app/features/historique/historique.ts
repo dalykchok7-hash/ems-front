@@ -41,13 +41,15 @@ export class HistoriqueComponent implements OnInit {
 
   // Filtres alignés sur les valeurs d'action du backend
   filters = [
-    { key: 'all',               label: 'Tout',         icon: '📋' },
-    { key: 'creer_reservation', label: 'Réservations', icon: '📅' },
-    { key: 'marquer_present',   label: 'Présences',    icon: '✅' },
-    { key: 'creer_abonnement',  label: 'Abonnements',  icon: '🎟️' },
-    { key: 'creer_client',      label: 'Clients',      icon: '👤' },
-    { key: 'creer_vente',       label: 'Ventes',       icon: '💰' },
-    { key: 'connexion',         label: 'Connexions',   icon: '🔑' },
+    { key: 'all',                  label: 'Tout',            icon: '📋' },
+    { key: 'creer_reservation',    label: 'Réservations',    icon: '📅' },
+    { key: 'marquer_present',      label: 'Présences',       icon: '✅' },
+    { key: 'creer_abonnement',     label: 'Abonnements',     icon: '🎟️' },
+    { key: 'modifier_abonnement',  label: 'Modif. Abo',      icon: '✏️' },
+    { key: 'creer_paiement',       label: 'Paiements',       icon: '💳' },
+    { key: 'creer_client',         label: 'Clients',         icon: '👤' },
+    { key: 'creer_vente',          label: 'Ventes',          icon: '💰' },
+    { key: 'connexion',            label: 'Connexions',      icon: '🔑' },
   ];
 
   // ── Computed ──────────────────────────────────────────────────────────────
@@ -162,43 +164,96 @@ export class HistoriqueComponent implements OnInit {
         return 'Connexion au système';
       case 'deconnexion':
         return 'Déconnexion du système';
+
       case 'creer_client':
         return 'Création de la fiche client';
+      case 'modifier_client': {
+        const champs: string[] = details.champs || Object.keys(details.modifications || {})
+          .filter((k: string) => !['personnel_role','personnel_shift'].includes(k));
+        return champs.length ? `Modification : ${champs.join(', ')}` : 'Modification fiche client';
+      }
+      case 'supprimer_client':
+        return `Suppression de la fiche client (CIN : ${details.client_cin || '?'})`;
+
       case 'creer_abonnement':
-        return  ` Pack ${details.type || '—'} — ${details.prix_paye || '—'} DT `;
+        return `Nouvel abonnement — Pack ${details.type || '—'} — ${details.prix_paye || '—'} DT`;
+      case 'modifier_abonnement': {
+        const m = details.modifications || details;
+        const ancienne = parseFloat(m.ancienne_avance || '0');
+        const nouvelle = parseFloat(m.nouvelle_avance || '0');
+        const estPayeChange = m.ancien_est_paye !== undefined && m.nouveau_est_paye !== undefined
+          && m.ancien_est_paye !== m.nouveau_est_paye;
+        const avanceChange = ancienne !== nouvelle;
+        const parts: string[] = [];
+        if (estPayeChange) {
+          parts.push(m.nouveau_est_paye ? 'Marqué comme payé' : 'Revenu en avance');
+        }
+        if (avanceChange) {
+          parts.push(`Avance : ${ancienne} DT → ${nouvelle} DT`);
+        }
+        if (m.delta_paiement) {
+          const delta = parseFloat(m.delta_paiement);
+          parts.push(`Paiement enregistré : ${delta > 0 ? '+' : ''}${delta} DT`);
+        }
+        return parts.length ? parts.join(' | ') : 'Modification abonnement';
+      }
+      case 'supprimer_abonnement':
+        return `Suppression abonnement — Pack ${details.type || '—'}`;
+
+      case 'creer_paiement': {
+        const montant = parseFloat(details.montant || '0');
+        return `Paiement enregistré : ${montant > 0 ? '+' : ''}${montant} DT — Pack ${details.type || '—'}`;
+      }
+
       case 'creer_reservation':
         return `Séance ${details.seance_date || '—'} ${details.seance_heure || '—'} — ${details.type_appareil || '—'}`.trim();
+      case 'annuler_reservation':
+        return `Annulation séance ${details.seance_date || '—'} ${details.seance_heure || '—'}`.trim();
       case 'marquer_present':
-        return `Séance ${details.seance_date || '—'} ${details.seance_heure || '—'}`.trim();
+        return `Présent — Séance ${details.seance_date || '—'} ${details.seance_heure || '—'}`.trim();
+
       case 'creer_vente':
-        return `Total : ${details.prix_total || '—'} DT (${details.lignes?.length || 0} article(s))`;
+        return `Vente : ${details.prix_total || '—'} DT (${details.lignes?.length || 0} article(s))`;
+
       default:
-        return action;
+        return action.replace(/_/g, ' ');
     }
   }
 
   getDotColor(action: string): string {
     const colors: Record<string, string> = {
-      connexion         : '#9ba3c8',
-      deconnexion       : '#9ba3c8',
-      creer_client      : '#c084fc',
-      creer_abonnement  : '#fbbf24',
-      creer_reservation : '#3b82f6',
-      marquer_present   : '#22c55e',
-      creer_vente       : '#22d3ee',
+      connexion            : '#9ba3c8',
+      deconnexion          : '#9ba3c8',
+      creer_client         : '#c084fc',
+      modifier_client      : '#a78bfa',
+      supprimer_client     : '#f87171',
+      creer_abonnement     : '#fbbf24',
+      modifier_abonnement  : '#f59e0b',
+      supprimer_abonnement : '#f87171',
+      creer_paiement       : '#22c55e',
+      creer_reservation    : '#3b82f6',
+      annuler_reservation  : '#f87171',
+      marquer_present      : '#22c55e',
+      creer_vente          : '#22d3ee',
     };
     return colors[action] || '#9ba3c8';
   }
 
   getBadgeClass(action: string): string {
     const classes: Record<string, string> = {
-      connexion         : 'badge--neutral',
-      deconnexion       : 'badge--neutral',
-      creer_client      : 'badge--purple',
-      creer_abonnement  : 'badge--amber',
-      creer_reservation : 'badge--blue',
-      marquer_present   : 'badge--green',
-      creer_vente       : 'badge--blue',
+      connexion            : 'badge--neutral',
+      deconnexion          : 'badge--neutral',
+      creer_client         : 'badge--purple',
+      modifier_client      : 'badge--purple',
+      supprimer_client     : 'badge--red',
+      creer_abonnement     : 'badge--amber',
+      modifier_abonnement  : 'badge--amber',
+      supprimer_abonnement : 'badge--red',
+      creer_paiement       : 'badge--green',
+      creer_reservation    : 'badge--blue',
+      annuler_reservation  : 'badge--red',
+      marquer_present      : 'badge--green',
+      creer_vente          : 'badge--blue',
     };
     return classes[action] || 'badge--neutral';
   }

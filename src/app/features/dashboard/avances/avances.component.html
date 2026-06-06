@@ -196,12 +196,21 @@
                   <input type="checkbox" [(ngModel)]="editForm.est_paye" (change)="onEstPayeChange(editForm.est_paye)" />
                   <span class="toggle-slider"></span>
                 </span>
-                <span>{{ editForm.est_paye ? 'Payé' : 'En attente de paiement' }}</span>
+                <span>{{ editForm.est_paye ? '✓ Payé intégralement' : 'En attente de paiement' }}</span>
               </label>
             </div>
-            <div class="form-group">
+            <!-- Avance : uniquement si pas encore payé -->
+            <div class="form-group" *ngIf="!editForm.est_paye">
               <label class="form-label">Avance payée (DT)</label>
-              <input class="form-input" type="number" min="0" [(ngModel)]="editForm.avance" [disabled]="editForm.est_paye" />
+              <input class="form-input" type="number" min="0" [(ngModel)]="editForm.avance" placeholder="0" />
+              <div style="font-size:9px;color:var(--t3);margin-top:3px">
+                Restant : {{ getDynamicMontantRestant() }} DT
+              </div>
+            </div>
+            <!-- Date de paiement : uniquement si payé -->
+            <div class="form-group" *ngIf="editForm.est_paye">
+              <label class="form-label">Date de paiement</label>
+              <input class="form-input" type="date" [(ngModel)]="editForm.date_paiement" />
             </div>
           </div>
 
